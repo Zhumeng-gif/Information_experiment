@@ -1,0 +1,8 @@
+
+*.css
+*.js
+*.woff
+data/.DS_Store
+.DS_Store
+code/.RData
+code/.Rhistory
