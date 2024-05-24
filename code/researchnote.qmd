@@ -1,0 +1,131 @@
+---
+title: "researchnote"
+format: html
+editor: visual
+---
+
+# setup
+```{r setup,include = FALSE,echo=FALSE}
+set.seed(0508)
+options (warn = -1)
+
+# packbirth loading
+library(pacman)
+p_load("rio",
+       "here",
+       "tidyverse",
+       "scales",
+       "car",
+       "haven",
+       "cobalt",
+       "ggplot2",
+       "modelsummary")
+```
+
+# dataLoda
+```{r pre}
+predata <- readxl::read_xlsx("../data/pre.xlsx") %>%
+  select(.,rid,"A1","A2","A3","A4","A8","A10","E6","C1","C2","C5__1","C5__4","C5__9","X1a","X2a","X3a","X4a","X5a","X6a","X1b","X2b","X3b","X4b","X5b","X6b","M1__1","M2","M3","M4__1","M4__2","M4__3","M4__4","M4__5","M4__6","M5__1","M5__2","M5__3","M5__4","M6__1","M6__2","M6__3","M6__4") %>%
+  rename(
+    gender = A1,
+    rural = A2,
+    age = A3,
+    race = A4,
+    marriage = A8,
+    party = E6,
+    incomeFam = A10,
+    trustCourt = C5__1,
+    trustGover = C5__4,
+    trustLocal = C5__9
+  ) %>%
+  mutate(treat = case_when(
+    predata$X1b != "NA" ~ 1,
+    predata$X1a != "NA" ~ 0
+  )) %>%
+  mutate(
+  m4 = select(.,M4__1,M4__2,M4__3,M4__4,M4__5,M4__6) %>%
+      rowMeans(., na.rm = TRUE),
+    m5 = select(.,M5__1,M5__2,M5__3,M5__4) %>%
+      rowMeans(., na.rm = TRUE),
+    m6 = select(.,M6__1,M6__2,M6__3,M6__4) %>%
+      rowMeans(., na.rm = TRUE)) 
+
+predata_tre <- predata %>%
+  subset(.,X1b != "NA") %>%
+  select(.,-c("X1a","X2a","X3a","X4a","X5a"))
+
+predata_con <- predata %>%
+  subset(.,X1a != "NA") %>%
+  select(.,-c("X1b","X2b","X3b","X4b","X5b","X6b"))
+
+
+```
+
+# dataAnalysis
+```{r tre vs con}
+predata_con_sum <- predata_con %>%
+  select(.,rid,gender,age,rural,marriage,party,incomeFam,trustCourt,trustGover,trustLocal,M1__1,M2,M3,m4,m5,m6)
+
+predata_tre_sum <- predata_tre %>%
+  select(.,rid,gender,age,rural,marriage,party,incomeFam,trustCourt,trustGover,trustLocal,M1__1,M2,M3,m4,m5,m6)
+
+predata_sum <- predata %>%
+  group_by(treat) %>%
+  summarise(
+    m4m = mean(m4,na.rm = TRUE),
+    m5m = mean(m4,na.rm = TRUE),
+    m6m = mean(m4,na.rm = TRUE),
+  )
+
+write.csv(predata_con,file = "../data/predata_con.csv")
+
+```
+
+# tableDescrible
+
+```{r table}
+datasummary(
+    data = predata_con_sum,
+    output = "../describle/Descriptivecontrol.docx",
+    (M1 = M1__1) +
+      (M2 = M2) +
+      (M3 = M3) +
+      (M4 = m4) +
+      (M5 = m5) +
+      (M6 = m6) + 
+      (Age = age) +
+      (Gender = gender) +
+      (Party = party) +
+      (Marriage = marriage) +
+      (Residence = rural)    ~
+        (Mean + SD + Min + Max + (Number = N)),
+    title = "Description of Data",
+    notes = "Source："
+) 
+
+datasummary(
+    data = predata_tre_sum,
+    output = "../describle/Descriptivetreat.docx",
+    (M1 = M1__1) +
+      (M2 = M2) +
+      (M3 = M3) +
+      (M4 = m4) +
+      (M5 = m5) +
+      (M6 = m6) + 
+      (Age = age) +
+      (Gender = gender) +
+      (Party = party) +
+      (Marriage = marriage) +
+      (Residence = rural)    ~
+        (Mean + SD + Min + Max + (Number = N)),
+    title = "Description of Data",
+    notes = "Source："
+) 
+```
+
+# test
+```{r test}
+testt <- t.test(predata_tre$m4,predata_con$m4,var = TRUE,paired = F)
+
+testa <- aov(m6 ~ treat,data = predata)
+```
