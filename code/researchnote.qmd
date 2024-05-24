@@ -2,13 +2,17 @@
 title: "researchnote"
 format: html
 editor: visual
+#echo: false # 不显示代码仅显示输入
+code-fold: true # 代码折叠
+code-annotations: hover
 ---
-
-# setup
-```{r setup,include = FALSE,echo=FALSE}
+# Setup
+```{r}
+#| label: setup
+#| include: FALSE
+#| echo: FALSE
 set.seed(0508)
 options (warn = -1)
-
 # packbirth loading
 library(pacman)
 p_load("rio",
@@ -23,53 +27,69 @@ p_load("rio",
 ```
 
 # dataLoda
-```{r pre}
-predata <- readxl::read_xlsx("../data/pre.xlsx") %>%
-  select(.,rid,"A1","A2","A3","A4","A8","A10","E6","C1","C2","C5__1","C5__4","C5__9","X1a","X2a","X3a","X4a","X5a","X6a","X1b","X2b","X3b","X4b","X5b","X6b","M1__1","M2","M3","M4__1","M4__2","M4__3","M4__4","M4__5","M4__6","M5__1","M5__2","M5__3","M5__4","M6__1","M6__2","M6__3","M6__4") %>%
+
+```{r}
+#| label: pre data
+#| echo: true
+data <- read_sav("../data/data.sav") %>%
+  select(.,rid,"A1","A2","A3","A4","A8","A10","A11","E6","C1","C2","C5__6","C5__4","C5__9","X1a","X2a","X3a","X4a","X5a","X6a","X1b","X2b","X3b","X4b","X5b","X6b","M1__1","M2","M3","M4__1","M4__2","M4__3","M4__4","M4__5","M4__6","M5__1","M5__2","M5__3","M5__4","M6__1","M6__2","M6__3","M6__4") %>%
   rename(
+    id = rid,
     gender = A1,
     rural = A2,
     age = A3,
     race = A4,
     marriage = A8,
     party = E6,
-    incomeFam = A10,
-    trustCourt = C5__1,
+    incomeFam_level = A10,
+    occ = A11,
+    trustGross = C5__6,
     trustGover = C5__4,
-    trustLocal = C5__9
-  ) %>%
+    trustLocal = C5__9,
+    demSuit = M1__1
+  ) 
+data$X1a <- as.factor(data$X1a)
+data$X1b <- as.factor(data$X1b)
+data <-  data %>%
   mutate(treat = case_when(
-    predata$X1b != "NA" ~ 1,
-    predata$X1a != "NA" ~ 0
-  )) %>%
-  mutate(
-  m4 = select(.,M4__1,M4__2,M4__3,M4__4,M4__5,M4__6) %>%
-      rowMeans(., na.rm = TRUE),
-    m5 = select(.,M5__1,M5__2,M5__3,M5__4) %>%
-      rowMeans(., na.rm = TRUE),
-    m6 = select(.,M6__1,M6__2,M6__3,M6__4) %>%
-      rowMeans(., na.rm = TRUE)) 
+    data$X1b != "NA" ~ 1, # <1>
+    data$X1a != "NA" ~ 0
+  ),
+  age = 2024 - age)
 
-predata_tre <- predata %>%
-  subset(.,X1b != "NA") %>%
-  select(.,-c("X1a","X2a","X3a","X4a","X5a"))
+# data_tre <- data %>%
+#   subset(.,X1b != "NA") %>%
+#   select(.,-c("X1a","X2a","X3a","X4a","X5a"))
 
-predata_con <- predata %>%
-  subset(.,X1a != "NA") %>%
-  select(.,-c("X1b","X2b","X3b","X4b","X5b","X6b"))
+# data_con <- data %>%
+#   subset(.,X1a != "NA") %>%
+#   select(.,-c("X1b","X2b","X3b","X4b","X5b","X6b"))
 
 
 ```
 
-# dataAnalysis
-```{r tre vs con}
-predata_con_sum <- predata_con %>%
+
+::: {.callout-note collapse="true"}
+1. X1a是对照组；X1b为实验组。
+2. 注释代码单独挑选出实验组和对照组
+3. 一键注释：Ctrl+shift+C.
+:::
+
+
+
+
+# dataSubgroup
+
+```{r}
+#| label: tre vs con
+#| eval: false
+data_con_sum <- data_con %>%
   select(.,rid,gender,age,rural,marriage,party,incomeFam,trustCourt,trustGover,trustLocal,M1__1,M2,M3,m4,m5,m6)
 
-predata_tre_sum <- predata_tre %>%
+data_tre_sum <- data_tre %>%
   select(.,rid,gender,age,rural,marriage,party,incomeFam,trustCourt,trustGover,trustLocal,M1__1,M2,M3,m4,m5,m6)
 
-predata_sum <- predata %>%
+data_sum <- data %>%
   group_by(treat) %>%
   summarise(
     m4m = mean(m4,na.rm = TRUE),
@@ -77,22 +97,96 @@ predata_sum <- predata %>%
     m6m = mean(m4,na.rm = TRUE),
   )
 
-write.csv(predata_con,file = "../data/predata_con.csv")
+write.csv(data_con,file = "../data/data_con.csv")
 
 ```
+
+
+# dataAlysis
+```{r}
+#| label: dataAlysis
+data$demSolve <- Recode(data$M3,"2 = 0")
+data$M4__1 <- 5 - data$M4__1 # <1>
+data$M4__2 <- 5 - data$M4__2
+data$M4__3 <- 5 - data$M4__3
+data$M4__5 <- 5 - data$M4__5
+data$dempositive <- data %>%
+  select(.,M4__1,M4__2,M4__3,M4__5) %>%
+  rowMeans(na.rm = TRUE) 
+
+data$M5__1 <- 5 - data$M5__1
+data$M5__2 <- 5 - data$M5__2
+data$M5__3 <- 5 - data$M5__3
+data$M5__4 <- 5 - data$M5__4
+data$demStrong <- data %>%
+  select(.,M5__1,M5__2,M5__3,M5__4) %>%
+  rowMeans(na.rm = TRUE) 
+
+data$nationalism <- data %>%
+  select(.,M6__1,M6__2,M6__3,M6__4) %>%
+  rowMeans(na.rm = TRUE)
+
+data <- data %>%
+  mutate(
+    cate4_x1 = case_when(
+      X1b == 1 ~ "exunder",
+      X1a == 1 ~ "exunder",
+      X1b == 2 ~ "under",
+      X1a == 2 ~ "under",
+      X1b == 3 ~ "right",
+      X1a == 3 ~ "right",
+      X1b == 4 ~ "over",
+      X1a == 4 ~ "over",
+    ),
+    cate3_x1 = case_when(
+      cate4_x1 == "exunder" ~ "under",
+      cate4_x1 == "under" ~ "under",
+      cate4_x1 == "right" ~ "right",
+      cate4_x1 == "over" ~ "over"
+    )
+  )
+temp <-  data %>%
+  select(id,treat,X1a,X1b,cate4_x1,cate3_x1)
+
+## subgroup
+dataSub <- data %>%
+  group_by(treat,cate) %>%
+  summarise(
+    demSuit_mean = mean(demSuit),
+    dempositive_mean = mean(dempositive),
+    demStrong_mean = mean(demStrong),
+    demSolve_mean = mean(demSolve),
+    nationalism_mean = mean(nationalism)
+  ) %>%
+  ungroup() %>%
+  right_join(.,data, by = "treat")
+
+dataSub <- dataSub %>%
+  mutate(
+    
+  )
+  
+```
+1. 题干中是最高民主价值观越低，因此要转换
+
+::: {.callout-warning collapse="true}
+目前民主肯定性回答的只包括1/2/3/5，2/4 不太像。
+:::
+
 
 # tableDescrible
 
 ```{r table}
+#| eval: false
 datasummary(
-    data = predata_con_sum,
-    output = "../describle/Descriptivecontrol.docx",
-    (M1 = M1__1) +
+    data = data,
+    output = "../describle/Des.docx",
+    (DemSuit = demSuit) +
       (M2 = M2) +
-      (M3 = M3) +
-      (M4 = m4) +
-      (M5 = m5) +
-      (M6 = m6) + 
+      (DemSolve = DemSolve) +
+      (Dempositive = dempositive) +
+      (DemStrong = demStrong) +
+      (Nationalism = nationalism) + 
       (Age = age) +
       (Gender = gender) +
       (Party = party) +
@@ -104,7 +198,7 @@ datasummary(
 ) 
 
 datasummary(
-    data = predata_tre_sum,
+    data = data_tre_sum,
     output = "../describle/Descriptivetreat.docx",
     (M1 = M1__1) +
       (M2 = M2) +
@@ -124,8 +218,10 @@ datasummary(
 ```
 
 # test
-```{r test}
-testt <- t.test(predata_tre$m4,predata_con$m4,var = TRUE,paired = F)
 
-testa <- aov(m6 ~ treat,data = predata)
+```{r test}
+#| eval: false
+testt <- t.test(data_tre$m4,data_con$m4,var = TRUE,paired = F)
+
+testa <- aov(m6 ~ treat,data = data)
 ```
