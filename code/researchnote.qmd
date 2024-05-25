@@ -95,13 +95,14 @@ data <-  data %>%
 #| code-annotations: below
 ## control variable
 data$newspol <- 6 - data$newspol
-data$edu <- Recode(data$edu,"1:3 = 1;4:5 = 2;6:7 = 3;8:9 = 4")
-data$party <- Recode(data$party,"2:4 = 0")
-data$rural <- Recode(data$rural,"c(1,3) = 0;2 = 1")
-data$race <- Recode(data$race,"2:5 = 0")
-data$marriage <- Recode(data$marriage,"2 = 1;3:6 = 0;1 = 0")
-data$gender <- 2 - data$gender
+data$edu <- as.character(Recode(data$edu,"1:3 = 1;4:5 = 2;6:7 = 3;8:9 = 4"))
+data$party <- as.factor(Recode(data$party,"2:4 = 0"))
+data$rural <- as.factor(Recode(data$rural,"c(1,3) = 0;2 = 1"))
+data$race <- as.factor(Recode(data$race,"2:5 = 0"))
+data$marriage <- as.factor(Recode(data$marriage,"2 = 1;3:6 = 0;1 = 0"))
+data$gender <- as.factor(2 - data$gender)
 data$treat <- as.factor(data$treat)
+data$occ <- as.factor(data$occ)
 
 ## outcome variable
 data$demSolve <- Recode(data$M3,"2 = 0")
@@ -295,7 +296,7 @@ fig1
 #| eval: true
 
 table1 <- data %>%
-  select(.,treat,age,gender,edu,party,marriage,incomeFam_level,occ,newspol,internetuse) %>%
+  select(.,treat,age,gender,edu,party,marriage,incomeFam_level,occ,newspol,internetuse,nationalism) %>%
   datasummary_balance(
   ~ treat,
   data = .,
@@ -329,25 +330,64 @@ table2 <- data %>%
   
 table2
 
-table3 <- datasummary(treat*demStrong ~ cate_over3 * (mean + sd),
-                      stars = TRUE,
-                      data = data,
-                      sparse_header=FALSE)
-table3
+# table3 <- datasummary(treat*demStrong ~ cate_over3 * (mean + sd),
+#                       stars = TRUE,
+#                       data = data,
+#                       sparse_header=FALSE)
+# table3
 ```
 
 
-## t-test(outcome variable)
-
-### aovtest
-
+## balance test(outcome variable)
+### overestimate
 ```{r}
-#| lable: aovtest 
-#| eval: false
-#| warning: false
-aovtest <- aov(demSolve~ as.factor(cate_over3), data = data)
+#| lable: over
+data_over <- data %>%
+  filter(.,cate_over4 == 1) %>%
+  select(.,treat,demSuit,demSolve,dempositive,demStrong) 
+balance_over <- data_over %>%
+  datasummary_balance(
+    ~ treat,
+    data = .,
+    stars = TRUE
+  )
+aov_over <- aov(demStrong~ treat, data = data_over)
+summary(aov_over)
 ```
 
+### underestimate
+```{r}
+#| lable: under
+data_under <- data %>%
+  filter(.,cate_over4 == -1) %>%
+  select(.,treat,demSuit,demSolve,dempositive,demStrong) 
+balance_under <- data_under %>%
+  datasummary_balance(
+    ~ treat,
+    data = .,
+    stars = TRUE
+  )
+balance_under
+aov_under <- aov(demSuit ~ treat, data = data_under)
+summary(aov_under)
+```
+
+### right
+```{r}
+#| lable: right
+data_right <- data %>%
+  filter(.,cate_over4 == 0) %>%
+  select(.,treat,demSuit,demSolve,dempositive,demStrong) 
+balance_right <- data_right %>%
+  datasummary_balance(
+    ~ treat,
+    data = .,
+    stars = TRUE
+  )
+balance_right
+aov_right <- aov(demSuit ~ treat, data = data_right)
+summary(aov_right)
+```
 
 # Regression
 ```{r}
