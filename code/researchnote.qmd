@@ -23,6 +23,8 @@ p_load("rio",
        "haven",
        "cobalt",
        "ggplot2",
+       "gt",
+       "tinytable",
        "modelsummary")
 ```
 
@@ -32,7 +34,7 @@ p_load("rio",
 #| label: pre data
 #| echo: true
 data <- read_sav("../data/data.sav") %>%
-  select(.,rid,"A1","A2","A3","A4","A8","A10","A11","E6","C1","C2","C5__6","C5__4","C5__9","X1a","X2a","X3a","X4a","X5a","X6a","X1b","X2b","X3b","X4b","X5b","X6b","M1__1","M2","M3","M4__1","M4__2","M4__3","M4__4","M4__5","M4__6","M5__1","M5__2","M5__3","M5__4","M6__1","M6__2","M6__3","M6__4") %>%
+  select(.,rid,"A1","A2","A3","A4","A8","A10","A11","E1","E6","C1","C1","C2","C8","C5__6","C5__4","C5__9","X1a","X2a","X3a","X4a","X5a","X6a","X1b","X2b","X3b","X4b","X5b","X6b","M1__1","M2","M3","M4__1","M4__2","M4__3","M4__4","M4__5","M4__6","M5__1","M5__2","M5__3","M5__4","M6__1","M6__2","M6__3","M6__4") %>%
   rename(
     id = rid,
     gender = A1,
@@ -40,16 +42,19 @@ data <- read_sav("../data/data.sav") %>%
     age = A3,
     race = A4,
     marriage = A8,
+    edu = E1,
     party = E6,
     incomeFam_level = A10,
     occ = A11,
+    newspol = C1,
+    internetuse = C2,
     trustGross = C5__6,
     trustGover = C5__4,
     trustLocal = C5__9,
     demSuit = M1__1
   ) 
 data <- data %>%
-  mutate(across(.cols = c(id,X1b,X1a),.fns = as.factor)
+  mutate(across(.cols = X1a:X6b,.fns = as.factor)
   )
 
 data <-  data %>%
@@ -58,6 +63,8 @@ data <-  data %>%
     data$X1a != "NA" ~ 0
   ),
   age = 2024 - age)
+
+
 # data_tre <- data %>%
 #   subset(.,X1b != "NA") %>%
 #   select(.,-c("X1a","X2a","X3a","X4a","X5a"))
@@ -81,37 +88,22 @@ data <-  data %>%
 :::
 
 
-
-
-# dataSubgroup
-
-```{r}
-#| label: tre vs con
-#| eval: false
-data_con_sum <- data_con %>%
-  select(.,rid,gender,age,rural,marriage,party,incomeFam,trustCourt,trustGover,trustLocal,M1__1,M2,M3,m4,m5,m6)
-
-data_tre_sum <- data_tre %>%
-  select(.,rid,gender,age,rural,marriage,party,incomeFam,trustCourt,trustGover,trustLocal,M1__1,M2,M3,m4,m5,m6)
-
-data_sum <- data %>%
-  group_by(treat) %>%
-  summarise(
-    m4m = mean(m4,na.rm = TRUE),
-    m5m = mean(m4,na.rm = TRUE),
-    m6m = mean(m4,na.rm = TRUE),
-  )
-
-write.csv(data_con,file = "../data/data_con.csv")
-
-```
-
-
 # dataAlysis
 ```{r}
 #| label: dataAlysis
 #| warning: false
 #| code-annotations: below
+## control variable
+data$newspol <- 6 - data$newspol
+data$edu <- Recode(data$edu,"1:3 = 1;4:5 = 2;6:7 = 3;8:9 = 4")
+data$party <- Recode(data$party,"2:4 = 0")
+data$rural <- Recode(data$rural,"c(1,3) = 0;2 = 1")
+data$race <- Recode(data$race,"2:5 = 0")
+data$marriage <- Recode(data$marriage,"2 = 1;3:6 = 0;1 = 0")
+data$gender <- 2 - data$gender
+data$treat <- as.factor(data$treat)
+
+## outcome variable
 data$demSolve <- Recode(data$M3,"2 = 0")
 data$M4__1 <- 5 - data$M4__1 # <1>
 data$M4__2 <- 5 - data$M4__2
@@ -132,8 +124,6 @@ data$demStrong <- data %>%
 data$nationalism <- data %>%
   select(.,M6__1,M6__2,M6__3,M6__4) %>%
   rowMeans(na.rm = TRUE)
-
-rowdata <- data
 
 data <- data %>%
   mutate(
@@ -237,7 +227,11 @@ data <- data %>%
   mutate(across(.cols = cate4_x1:cate3_x6,.fns = as.numeric),
          escore4_sum = rowSums( across(c(cate4_x1,cate4_x2,cate4_x3,cate4_x4,cate4_x5,cate4_x6))),
          escore3_sum = rowSums(across(c(cate3_x1,cate3_x2,cate3_x3,cate3_x4,cate3_x5,cate3_x6)))
-         ) %>%      # <2> 
+         )
+
+rawdata <- data 
+
+data <- data %>%      # <2> 
   mutate(
     escore4_summean = mean(escore4_sum),
     escore3_summean = mean(escore3_sum),
@@ -258,11 +252,13 @@ data <- data %>%
   )
 
 
-
-
-
 # temp <- data %>%
 #   select(.,id,escore4_sum,escore4_sumsd,escore3_sum,escore3_sumsd,cate_over4,cate_over3)
+```
+
+## groupData
+```{r}
+
 ```
 
 ::: {.callout-important}
@@ -271,7 +267,8 @@ data <- data %>%
 2.过度高估和低估除了用标准差，直接用均值的效果怎么样，以及用数值减去均值怎么样？
 :::
 
-# Plot 
+# fig1
+
 ```{r}
 #| label: fig1
 #| fig-cap: The Respondents’ Evaluation about TaiWan
@@ -282,126 +279,119 @@ fig1 <- data %>%
 fig1
 ```
 
-
-# subgroup
-```{r}
-#| label: subgroup
-#| eval: false
-dataSub <- data %>%
-  group_by(treat) %>%
-  summarise(
-    demSuit_mean = mean(demSuit),
-    dempositive_mean = mean(dempositive),
-    demStrong_mean = mean(demStrong),
-    demSolve_mean = mean(demSolve),
-    nationalism_mean = mean(nationalism)
-  ) %>%
-  ungroup() %>%
-  right_join(.,data, by = "treat")
-
-dataSub <- dataSub %>%
-  mutate(
-    
-  )
-
-```
-
 1. 题干中是最高民主价值观越低，因此要转换
 2. across函数跨列操作，另外将因子(factor)转化成数值(numeric)，可能会造成数据改变，因此要先转化成字符型(character),再转化成数值 y = as.numeric(as.character(x))。好在这里的数据一开始都是字符型。
 
-::: {.callout-warning collapse="true}
+::: {.callout-warning collapse="true"}
 目前民主肯定性回答的只包括1/2/3/5，2/4 不太像。
 :::
 
 
-# tableDescrible
-## 对照组和实验组的描述性统计分析表格
+## table1
 
 ```{r}
 #| label: tbl-tre2con
-#| tbl-cap: "Description of Control Variable"
-#| tbl-subcap: 
-#|   - "Treatment"
-#|   - "Control"
-#| layout-ncol: 2
+#| tbl-cap: "Balance table"
 #| eval: true
 
-library(knitr)
+table1 <- data %>%
+  select(.,treat,age,gender,edu,party,marriage,incomeFam_level,occ,newspol,internetuse) %>%
+  datasummary_balance(
+  ~ treat,
+  data = .,
+  title = "Balance Description",
+  stars = TRUE,
+  output = "tinytable" 
+)     
+#save_tt("../outputs/table1.docx")
+table1 # <4>
+```
+4. 这里默认输出的是tinytable格式，也可以使用gt格式。
 
+::: {.callout-warning collapse="true"}
+定制化表格后，如果要保存文件见<https://modelsummary.com/vignettes/appearance.html>部分Warning: Saving to file
+:::
+
+## treat & estimate
+```{r}
+table2 <- data %>%
+  select(.,treat,cate_over4) %>%
+  datasummary_crosstab(
+    treat ~ cate_over4,
+    data = .,
+    output = "tinytable",
+    statistic = 1 ~ 1 + N 
+  ) %>%
+   group_tt(
+     j = list(
+      "Estimate" = 3:5)
+   )
+  
+table2
+
+table3 <- datasummary(treat*demStrong ~ cate_over3 * (mean + sd),
+                      stars = TRUE,
+                      data = data,
+                      sparse_header=FALSE)
+table3
 ```
 
-```{r table}
+
+## t-test(outcome variable)
+
+### aovtest
+
+```{r}
+#| lable: aovtest 
 #| eval: false
-datasummary(
-    data = data,
-    output = "../describle/Des.docx",
-    (DemSuit = demSuit) +
-      (M2 = M2) +
-      (DemSolve = DemSolve) +
-      (Dempositive = dempositive) +
-      (DemStrong = demStrong) +
-      (Nationalism = nationalism) + 
-      (Age = age) +
-      (Gender = gender) +
-      (Party = party) +
-      (Marriage = marriage) +
-      (Residence = rural)    ~
-        (Mean + SD + Min + Max + (Number = N)),
-    title = "Description of Data",
-    notes = "Source："
-) 
-
-datasummary(
-    data = data_tre_sum,
-    output = "../describle/Descriptivetreat.docx",
-    (M1 = M1__1) +
-      (M2 = M2) +
-      (M3 = M3) +
-      (M4 = m4) +
-      (M5 = m5) +
-      (M6 = m6) + 
-      (Age = age) +
-      (Gender = gender) +
-      (Party = party) +
-      (Marriage = marriage) +
-      (Residence = rural)    ~
-        (Mean + SD + Min + Max + (Number = N)),
-    title = "Description of Data",
-    notes = "Source："
-) 
-```
-## 对照组和实验组的t-test(outcome variable)
-
-
-# test
-
-```{r test}
-#| eval: false
-testt <- t.test(data_tre$m4,data_con$m4,var = TRUE,paired = F)
-
-aovtest <-  aov(demSolve ~  treat * cate_over3, data = data)
-summary(aovtest)
+#| warning: false
+aovtest <- aov(demSolve~ as.factor(cate_over3), data = data)
 ```
 
 
 # Regression
 ```{r}
-
+#| label: regression
 data$cate_over4 <- as.factor(data$cate_over4)
 data$cate_over4 <- relevel(data$cate_over4, ref = "0")
+
+## varibale_list
+ls_ctrl <- c(
+   "cate_over4-1" = "under",
+    "cate_over41" = "over",
+   "age" = "Age",
+   "gender" = "Gender",
+   "marriage" = "Marriage",
+   "edu" = "Education",
+   "party" = "Partymember",
+   "rural" = "Residence",
+   "incomeFamily_level" = "Family socialLevel",
+   "occ" = "WorkUnite"
+)
 lm_positive <- lm(dempositive ~ treat * cate_over4+age+marriage+party+rural+race+gender,data = data)
 lm_strong <- lm(demStrong ~ treat * cate_over4+age+marriage+party+rural+race+gender,data = data)
 lm_solve <- lm(demSolve ~ treat * cate_over4+age+marriage+party+rural+race+gender,data = data)
 lm_suit <- lm(demSuit ~ treat * cate_over4+age+marriage+party+rural+race+gender,data = data)
-mlist <- list(lm_positive,lm_strong,lm_solve,lm_suit)
-results <- summary(lm_positive)$co
+mlist <- list(
+  "Dempositive" = lm_positive,
+  "StrongLeader" = lm_strong,
+  "Capbility" = lm_solve,
+  "ChinaSuit" = lm_suit)
+
 results <- msummary(mlist,
-         output = "../outputs/results.docx",
-         stars = TRUE)
-knitr::kable(results)
+         #output = "kableExtra",
+         stars = TRUE,
+         coef_rename = ls_ctrl,
+         gof_omit = "F",
+         coef_omit = "(Intercept)") # <3>
+results
+# kableExtra::kable(results)
 
 ```
+3. gof_omit和coef_omit的区别：coef_omit去掉变量中的variable,gof_omit去掉结果中的变量。
+
 
 结果：
 1. 按照三分类的话(cate_over3)，只对政治强人有正面影响。
+
 
