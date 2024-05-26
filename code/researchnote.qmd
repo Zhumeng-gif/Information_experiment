@@ -102,7 +102,7 @@ data$rural <- Recode(data$rural,"c(1,3) = 0;2 = 1")
 data$race <- Recode(data$race,"2:5 = 0")
 data$marriage <- Recode(data$marriage,"2 = 1;3:6 = 0;1 = 0")
 data$gender <- 2 - data$gender
-data$treat <- as.factor(data$treat)
+data$treat <- factor(data$treat,levels = c(0,1),labels = c("Control","Treat"))
 data$occ <- data$occ
 
 ## outcome variable
@@ -260,6 +260,12 @@ data <- data %>%      # <2>
      `escore4_sum` < escore4_summean ~ 0 
     )
   )
+
+data$cate_over3 <- factor(data$cate_over3,levels = c(-1,0,1),labels = c("under","right","over"))
+data$cate_over3 <- relevel(data$cate_over3,ref = "right")
+
+data$cate_over4 <- factor(data$cate_over4,levels = c(-1,0,1),labels = c("under","right","over"))
+data$cate_over4 <- relevel(data$cate_over4,ref = "right")
 ```
 
 
@@ -378,7 +384,7 @@ table2
 ```{r}
 #| lable: over
 data_over <- data %>%
-  dplyr::filter(.,cate_over4 == 1) %>%
+  dplyr::filter(.,cate_over3 == "over") %>%
   dplyr::select(.,treat,demSuit,demSolve,dempositive,demStrong) 
 balance_over <- data_over %>%
   datasummary_balance(
@@ -395,7 +401,7 @@ summary(aov_over)
 ```{r}
 #| lable: under
 data_under <- data %>%
-  dplyr::filter(.,cate_over4 == -1) %>%
+  dplyr::filter(.,cate_over3 == "under") %>%
   dplyr::select(.,treat,demSuit,demSolve,dempositive,demStrong) 
 balance_under <- data_under %>%
   datasummary_balance(
@@ -412,7 +418,7 @@ summary(aov_under)
 ```{r}
 #| lable: right
 data_right <- data %>%
-  dplyr::filter(.,cate_over4 == 0) %>%
+  dplyr::filter(.,cate_over3 == "right") %>%
   dplyr::select(.,treat,demSuit,demSolve,dempositive,demStrong) 
 balance_right <- data_right %>%
   datasummary_balance(
@@ -430,14 +436,14 @@ summary(aov_right)
 ### cate4
 ```{r}
 #| label: regression_cate4
-#| eval: false
-data$cate_over4 <- factor(data$cate_over4,levels = c(-1,0,1),labels = c("under","right","over"))
-data$cate_over4 <- relevel(data$cate_over4, ref = "right")
 
 ## varibale_list
 ls_ctrl <- c(
-   "cate_over4-1" = "under",
-   "cate_over41" = "over",
+   "treatTreat" = "Treat",
+   "cate_over4under" = "under",
+   "cate_over4over" = "over",
+   "cate_over3under" = "under",
+   "cate_over3over" = "over",
    "age" = "Age",
    "gender" = "Gender",
    "edu" = "Education",
@@ -460,7 +466,7 @@ lm_strong_cate4plus <- lm(demStrong ~ treat *escore4_sum+age+marriage+party+rura
 lm_solve_cate4plus <- lm(demSolve ~ treat *escore4_sum++age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
 lm_suit_cate4plus <- lm(demSuit ~ treat *escore4_sum+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
 
-mlist <- list(
+mlist_cate4 <- list(
   "Dempositive" = lm_positive_cate4,
   "Dempositive_escore4" = lm_positive_cate4plus,
   "StrongLeader" = lm_strong_cate4,
@@ -470,7 +476,7 @@ mlist <- list(
   "ChinaSuit" = lm_suit_cate4,
   "ChinaSuit_escore4" = lm_suit_cate4plus)
 
-results_cate4 <- msummary(mlist,
+results_cate4 <- msummary(mlist_cate4,
          #output = "kableExtra",
          stars = TRUE,
          coef_rename = ls_ctrl,
@@ -482,10 +488,7 @@ results_cate4
 
 ### cate3
 ```{r}
-#| label: regression_cate4
-data$cate_over3 <- factor(data$cate_over3,levels = c(-1,0,1),labels = c("under","right","over"))
-data$cate_over3 <- relevel(data$cate_over3,ref = "right")
-
+#| label: regression_cate3
 lm_positive_cate3 <- lm(dempositive ~ treat * cate_over3+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
 lm_strong_cate3 <- lm(demStrong ~ treat * cate_over3+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
 lm_solve_cate3 <- lm(demSolve ~ treat * cate_over3+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
@@ -496,7 +499,7 @@ lm_strong_cate3plus <- lm(demStrong ~ treat *escore3_sum+treat*cate_over3+age+ma
 lm_solve_cate3plus <- lm(demSolve ~ treat *escore3_sum+treat*cate_over3+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
 lm_suit_cate3plus <- lm(demSuit ~ treat *escore3_sum+treat*cate_over3+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
 
-mlist <- list(
+mlist_cate3 <- list(
   "Dempositive" = lm_positive_cate3,
   "Dempositive_escore" = lm_positive_cate3plus,
   "StrongLeader" = lm_strong_cate3,
@@ -506,7 +509,7 @@ mlist <- list(
   "ChinaSuit" = lm_suit_cate3,
   "ChinaSuit_escore" = lm_suit_cate3plus)
 
-results_cate3 <- msummary(mlist,
+results_cate3 <- msummary(mlist_cate3,
          #output = "kableExtra",
          stars = TRUE,
          coef_rename = ls_ctrl,
