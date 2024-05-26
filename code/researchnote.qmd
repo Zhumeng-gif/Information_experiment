@@ -35,7 +35,7 @@ p_load("rio",
 #| echo: true
 data <- read_sav("../data/data.sav") %>%
   select(.,rid,"A1","A2","A3","A4","A8","A10","A11","E1","E6","C1","C1","C2","C8","C5__6","C5__4","C5__9","X1a","X2a","X3a","X4a","X5a","X6a","X1b","X2b","X3b","X4b","X5b","X6b","M1__1","M2","M3","M4__1","M4__2","M4__3","M4__4","M4__5","M4__6","M5__1","M5__2","M5__3","M5__4","M6__1","M6__2","M6__3","M6__4") %>%
-  rename(
+  dplyr::rename(
     id = rid,
     gender = A1,
     rural = A2,
@@ -53,12 +53,13 @@ data <- read_sav("../data/data.sav") %>%
     trustLocal = C5__9,
     demSuit = M1__1
   ) 
+
 data <- data %>%
-  mutate(across(.cols = X1a:X6b,.fns = as.factor)
+  dplyr::mutate(across(.cols = X1a:X6b,.fns = as.factor)
   )
 
 data <-  data %>%
-  mutate(treat = case_when(
+  dplyr::mutate(treat = case_when(
     data$X1b != "NA" ~ 1, # <1>
     data$X1a != "NA" ~ 0
   ),
@@ -95,14 +96,14 @@ data <-  data %>%
 #| code-annotations: below
 ## control variable
 data$newspol <- 6 - data$newspol
-data$edu <- as.character(Recode(data$edu,"1:3 = 1;4:5 = 2;6:7 = 3;8:9 = 4"))
-data$party <- as.factor(Recode(data$party,"2:4 = 0"))
-data$rural <- as.factor(Recode(data$rural,"c(1,3) = 0;2 = 1"))
-data$race <- as.factor(Recode(data$race,"2:5 = 0"))
-data$marriage <- as.factor(Recode(data$marriage,"2 = 1;3:6 = 0;1 = 0"))
-data$gender <- as.factor(2 - data$gender)
+data$edu <- Recode(data$edu,"1:3 = 1;4:5 = 2;6:7 = 3;8:9 = 4")
+data$party <- Recode(data$party,"2:4 = 0")
+data$rural <- Recode(data$rural,"c(1,3) = 0;2 = 1")
+data$race <- Recode(data$race,"2:5 = 0")
+data$marriage <- Recode(data$marriage,"2 = 1;3:6 = 0;1 = 0")
+data$gender <- 2 - data$gender
 data$treat <- as.factor(data$treat)
-data$occ <- as.factor(data$occ)
+data$occ <- data$occ
 
 ## outcome variable
 data$demSolve <- Recode(data$M3,"2 = 0")
@@ -111,7 +112,7 @@ data$M4__2 <- 5 - data$M4__2
 data$M4__3 <- 5 - data$M4__3
 data$M4__5 <- 5 - data$M4__5
 data$dempositive <- data %>%
-  select(.,M4__1,M4__2,M4__3,M4__5) %>%
+  dplyr::select(.,M4__1,M4__2,M4__3,M4__5) %>%
   rowMeans(na.rm = TRUE) 
 
 data$M5__1 <- 5 - data$M5__1
@@ -119,7 +120,7 @@ data$M5__2 <- 5 - data$M5__2
 data$M5__3 <- 5 - data$M5__3
 data$M5__4 <- 5 - data$M5__4
 data$demStrong <- data %>%
-  select(.,M5__1,M5__2,M5__3,M5__4) %>%
+  dplyr::select(.,M5__1,M5__2,M5__3,M5__4) %>%
   rowMeans(na.rm = TRUE) 
 
 data$nationalism <- data %>%
@@ -127,7 +128,7 @@ data$nationalism <- data %>%
   rowMeans(na.rm = TRUE)
 
 data <- data %>%
-  mutate(
+  dplyr::mutate(
     cate4_x1 = case_when(
       X1b == 1 ~ "-2",
       X1a == 1 ~ "-2",
@@ -225,7 +226,7 @@ data <- data %>%
       cate4_x6 == "1" ~ "1"
     )
   ) %>%
-  mutate(across(.cols = cate4_x1:cate3_x6,.fns = as.numeric),
+  dplyr::mutate(across(.cols = cate4_x1:cate3_x6,.fns = as.numeric),
          escore4_sum = rowSums( across(c(cate4_x1,cate4_x2,cate4_x3,cate4_x4,cate4_x5,cate4_x6))),
          escore3_sum = rowSums(across(c(cate3_x1,cate3_x2,cate3_x3,cate3_x4,cate3_x5,cate3_x6)))
          )
@@ -233,7 +234,7 @@ data <- data %>%
 rawdata <- data 
 
 data <- data %>%      # <2> 
-  mutate(
+  dplyr::mutate(
     escore4_summean = mean(escore4_sum),
     escore3_summean = mean(escore3_sum),
     escore3_sumsd = sd(escore3_sum), # <3>
@@ -251,8 +252,39 @@ data <- data %>%      # <2>
       `escore4_sum` < `escore4_sumsd` &`escore4_sum` > (-1)*(`escore4_sumsd`) ~ "0"
     )
   )
+```
 
 
+```{r}
+#| label: fig-error
+
+# fi2 <- data %>% 
+#   ggplot(aes(treat, demStrong)) +
+#    stat_summary(fun = mean,geom = "bar",fill = c("#999999","#E69F00"),width = .2) +
+#   stat_summary(geom = "errorbar",fill = c("#999999","#E69F00"),width = 0.2) +
+#   labs(x="Treat",y = "Evaluation",title = "Evaluation among Different Groups")
+# fi2 # <7> 
+               #fun.data = ~mean_se(., mult = 1.96)) # <6>
+
+fig3 <- data %>% 
+  ggplot(aes(x = treat, y = demStrong)) +
+  stat_summary(fun.data = "mean_se",
+               geom = "errorbar",
+               width = .2, #改变最大值和最小值（上下两根横线）的显示长度
+               colour = c("#999999","#E69F00"),
+               linewidth = .8) +  
+  stat_summary(fun = "mean", geom = "point",size = 2.5) +
+  labs(x="Treat",y = "Evaluation",title = "Evaluation among Different Groups") +
+  scale_y_continuous(limits=c(2.6,2.8),oob = scales::oob_keep)
+  #coord_cartesian(ylim=c(2.6,2.8)) #<8>
+fig3
+
+```
+6. 如果要误差棒给出95%的置信区间，可添加#fun.data = ~mean_se(., mult = 1.96))
+7. fig2为误差柱状图；fig3为误差条图。
+8. 和oob = scales::oob_keep所起的作用一样。
+
+```{r}
 # temp <- data %>%
 #   select(.,id,escore4_sum,escore4_sumsd,escore3_sum,escore3_sumsd,cate_over4,cate_over3)
 ```
@@ -433,5 +465,13 @@ results
 
 结果：
 1. 按照三分类的话(cate_over3)，只对政治强人有正面影响。
+
+
+# Who
+```{r}
+#| label: charachter
+#| 
+```
+
 
 
