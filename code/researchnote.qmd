@@ -21,7 +21,7 @@ p_load("rio",
        "scales",
        "car",
        "haven",
-       "cobalt",
+       "MASS",
        "ggplot2",
        "gt",
        "tinytable",
@@ -34,7 +34,7 @@ p_load("rio",
 #| label: pre data
 #| echo: true
 data <- read_sav("../data/data.sav") %>%
-  select(.,rid,"A1","A2","A3","A4","A8","A10","A11","E1","E6","C1","C1","C2","C8","C5__6","C5__4","C5__9","X1a","X2a","X3a","X4a","X5a","X6a","X1b","X2b","X3b","X4b","X5b","X6b","M1__1","M2","M3","M4__1","M4__2","M4__3","M4__4","M4__5","M4__6","M5__1","M5__2","M5__3","M5__4","M6__1","M6__2","M6__3","M6__4") %>%
+  dplyr::select(.,rid,"A1","A2","A3","A4","A8","A10","A11","E1","E6","C1","C1","C2","C8","C5__6","C5__4","C5__9","X1a","X2a","X3a","X4a","X5a","X6a","X1b","X2b","X3b","X4b","X5b","X6b","M1__1","M2","M3","M4__1","M4__2","M4__3","M4__4","M4__5","M4__6","M5__1","M5__2","M5__3","M5__4","M6__1","M6__2","M6__3","M6__4") %>%
   dplyr::rename(
     id = rid,
     gender = A1,
@@ -124,7 +124,7 @@ data$demStrong <- data %>%
   rowMeans(na.rm = TRUE) 
 
 data$nationalism <- data %>%
-  select(.,M6__1,M6__2,M6__3,M6__4) %>%
+  dplyr::select(.,M6__1,M6__2,M6__3,M6__4) %>%
   rowMeans(na.rm = TRUE)
 
 data <- data %>%
@@ -250,6 +250,14 @@ data <- data %>%      # <2>
       `escore4_sum` >= `escore4_sumsd` ~ "1",
       `escore4_sum` <=   (-1)*(`escore4_sumsd`) ~ "-1",
       `escore4_sum` < `escore4_sumsd` &`escore4_sum` > (-1)*(`escore4_sumsd`) ~ "0"
+    ),
+    cate_over32 = case_when(
+      `escore3_sum` >= escore3_summean ~ 1,
+      `escore3_sum` < escore3_summean ~ 0
+    ),
+    cate_over42 = case_when(
+     `escore4_sum` >= escore4_summean ~ 1,
+     `escore4_sum` < escore4_summean ~ 0 
     )
   )
 ```
@@ -289,11 +297,6 @@ fig3
 #   select(.,id,escore4_sum,escore4_sumsd,escore3_sum,escore3_sumsd,cate_over4,cate_over3)
 ```
 
-## groupData
-```{r}
-
-```
-
 ::: {.callout-important}
 1.这里求标准差需要注意的是到底是先分组再求还是在所有人中求。结果肯定不一样，目前直接求。
 
@@ -328,7 +331,7 @@ fig1
 #| eval: true
 
 table1 <- data %>%
-  select(.,treat,age,gender,edu,party,marriage,incomeFam_level,occ,newspol,internetuse,nationalism) %>%
+  dplyr::select(.,treat,age,gender,edu,party,marriage,incomeFam_level,occ,newspol,internetuse,nationalism) %>%
   datasummary_balance(
   ~ treat,
   data = .,
@@ -348,7 +351,7 @@ table1 # <4>
 ## treat & estimate
 ```{r}
 table2 <- data %>%
-  select(.,treat,cate_over4) %>%
+  dplyr::select(.,treat,cate_over4) %>%
   datasummary_crosstab(
     treat ~ cate_over4,
     data = .,
@@ -375,14 +378,15 @@ table2
 ```{r}
 #| lable: over
 data_over <- data %>%
-  filter(.,cate_over4 == 1) %>%
-  select(.,treat,demSuit,demSolve,dempositive,demStrong) 
+  dplyr::filter(.,cate_over4 == 1) %>%
+  dplyr::select(.,treat,demSuit,demSolve,dempositive,demStrong) 
 balance_over <- data_over %>%
   datasummary_balance(
     ~ treat,
     data = .,
     stars = TRUE
   )
+balance_over
 aov_over <- aov(demStrong~ treat, data = data_over)
 summary(aov_over)
 ```
@@ -391,8 +395,8 @@ summary(aov_over)
 ```{r}
 #| lable: under
 data_under <- data %>%
-  filter(.,cate_over4 == -1) %>%
-  select(.,treat,demSuit,demSolve,dempositive,demStrong) 
+  dplyr::filter(.,cate_over4 == -1) %>%
+  dplyr::select(.,treat,demSuit,demSolve,dempositive,demStrong) 
 balance_under <- data_under %>%
   datasummary_balance(
     ~ treat,
@@ -408,8 +412,8 @@ summary(aov_under)
 ```{r}
 #| lable: right
 data_right <- data %>%
-  filter(.,cate_over4 == 0) %>%
-  select(.,treat,demSuit,demSolve,dempositive,demStrong) 
+  dplyr::filter(.,cate_over4 == 0) %>%
+  dplyr::select(.,treat,demSuit,demSolve,dempositive,demStrong) 
 balance_right <- data_right %>%
   datasummary_balance(
     ~ treat,
@@ -422,55 +426,163 @@ summary(aov_right)
 ```
 
 # Regression
+## sd_cate
+### cate4
 ```{r}
-#| label: regression
-data$cate_over4 <- as.factor(data$cate_over4)
-data$cate_over4 <- relevel(data$cate_over4, ref = "0")
+#| label: regression_cate4
+#| eval: false
+data$cate_over4 <- factor(data$cate_over4,levels = c(-1,0,1),labels = c("under","right","over"))
+data$cate_over4 <- relevel(data$cate_over4, ref = "right")
 
 ## varibale_list
 ls_ctrl <- c(
    "cate_over4-1" = "under",
-    "cate_over41" = "over",
+   "cate_over41" = "over",
    "age" = "Age",
    "gender" = "Gender",
-   "marriage" = "Marriage",
    "edu" = "Education",
    "party" = "Partymember",
    "rural" = "Residence",
+   "marriage" = "Marriage",
    "incomeFamily_level" = "Family socialLevel",
+   "newspol" = "Political News consumption",
+   "intertnetuse" = "Internet Use Frequency",
    "occ" = "WorkUnite"
 )
-lm_positive <- lm(dempositive ~ treat * cate_over4+age+marriage+party+rural+race+gender,data = data)
-lm_strong <- lm(demStrong ~ treat * cate_over4+age+marriage+party+rural+race+gender,data = data)
-lm_solve <- lm(demSolve ~ treat * cate_over4+age+marriage+party+rural+race+gender,data = data)
-lm_suit <- lm(demSuit ~ treat * cate_over4+age+marriage+party+rural+race+gender,data = data)
-mlist <- list(
-  "Dempositive" = lm_positive,
-  "StrongLeader" = lm_strong,
-  "Capbility" = lm_solve,
-  "ChinaSuit" = lm_suit)
 
-results <- msummary(mlist,
+lm_positive_cate4 <- lm(dempositive ~ treat * cate_over4+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
+lm_strong_cate4 <- lm(demStrong ~ treat * cate_over4+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
+lm_solve_cate4 <- lm(demSolve ~ treat * cate_over4+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
+lm_suit_cate4 <- lm(demSuit ~ treat * cate_over4+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
+
+lm_positive_cate4plus <- lm(dempositive ~ treat *escore4_sum+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
+lm_strong_cate4plus <- lm(demStrong ~ treat *escore4_sum+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
+lm_solve_cate4plus <- lm(demSolve ~ treat *escore4_sum++age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
+lm_suit_cate4plus <- lm(demSuit ~ treat *escore4_sum+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
+
+mlist <- list(
+  "Dempositive" = lm_positive_cate4,
+  "Dempositive_escore4" = lm_positive_cate4plus,
+  "StrongLeader" = lm_strong_cate4,
+  "StrongLeader_escore4" = lm_strong_cate4plus,
+  "Capbility" = lm_solve_cate4,
+  "Capbility_escore4" = lm_solve_cate4plus,
+  "ChinaSuit" = lm_suit_cate4,
+  "ChinaSuit_escore4" = lm_suit_cate4plus)
+
+results_cate4 <- msummary(mlist,
          #output = "kableExtra",
          stars = TRUE,
          coef_rename = ls_ctrl,
          gof_omit = "F",
          coef_omit = "(Intercept)") # <3>
-results
-# kableExtra::kable(results)
-
+results_cate4
 ```
 3. gof_omit和coef_omit的区别：coef_omit去掉变量中的variable,gof_omit去掉结果中的变量。
 
+### cate3
+```{r}
+#| label: regression_cate4
+data$cate_over3 <- factor(data$cate_over3,levels = c(-1,0,1),labels = c("under","right","over"))
+data$cate_over3 <- relevel(data$cate_over3,ref = "right")
+
+lm_positive_cate3 <- lm(dempositive ~ treat * cate_over3+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
+lm_strong_cate3 <- lm(demStrong ~ treat * cate_over3+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
+lm_solve_cate3 <- lm(demSolve ~ treat * cate_over3+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
+lm_suit_cate3 <- lm(demSuit ~ treat * cate_over3+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
+
+lm_positive_cate3plus <- lm(dempositive ~ treat *escore3_sum+treat*cate_over3+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
+lm_strong_cate3plus <- lm(demStrong ~ treat *escore3_sum+treat*cate_over3+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
+lm_solve_cate3plus <- lm(demSolve ~ treat *escore3_sum+treat*cate_over3+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
+lm_suit_cate3plus <- lm(demSuit ~ treat *escore3_sum+treat*cate_over3+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
+
+mlist <- list(
+  "Dempositive" = lm_positive_cate3,
+  "Dempositive_escore" = lm_positive_cate3plus,
+  "StrongLeader" = lm_strong_cate3,
+  "StrongLeader_escore" = lm_strong_cate3plus,
+  "Capbility" = lm_solve_cate3,
+  "Capbility_escore" = lm_solve_cate3plus,
+  "ChinaSuit" = lm_suit_cate3,
+  "ChinaSuit_escore" = lm_suit_cate3plus)
+
+results_cate3 <- msummary(mlist,
+         #output = "kableExtra",
+         stars = TRUE,
+         coef_rename = ls_ctrl,
+         gof_omit = "F",
+         coef_omit = "(Intercept)") # <3>
+results_cate3
+```
 
 结果：
-1. 按照三分类的话(cate_over3)，只对政治强人有正面影响。
+1. 按照三分类的话(cate_over3)，交互项只对政治强人有正面影响；
+2. 上面的结论都是没有添加原本得分，但是添加原本得分之后结果的显著性以及交互项的显著性会好点：
+ - 以escore3_sum为列：escore3_sum与strong为负显著，交互项以及各自的结果都不一样。
+ - 回归中包含`treat*cate_over3`和`treat*escore`,会增加Capbility_escore的显著性。但无论怎样，strongleader都显著。
+3. 按照四分类的话(cate_over4)，三分类中对政治强人的显著性都消失了，但民主适合中国的显著性增加了：
+ - newspol在其中的影响很大，去掉的话结果不太一样(主要是对cate_over4)。balanced test里面也显示出实验组和对照组在政治新闻消费方面的差异具有统计显著性。
+ - 回归同时包含`treat*cate_over4`和`treat*escore4`,民主适合中国的显著性也有。
 
+
+## mean_cate
+```{r}
+#| label: mean group
+#| eval: false
+data$cate_over42 <- factor(data$cate_over42,levels = c(0,1),labels = c("under","over"))
+
+lm_positive_cate3mean <- lm(dempositive ~ treat *escore4_sum+cate_over42+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
+lm_strong_cate3mean <- lm(demStrong ~ treat *escore4_sum+cate_over42+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
+lm_solve_cate3mean <- lm(demSolve ~ treat *escore4_sum+cate_over42+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
+lm_suit_cate3mean <- lm(demSuit ~ treat *escore4_sum+cate_over42+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
+
+
+mlist <- list(
+  "Dempositive_escore" = lm_positive_cate3mean,
+  "StrongLeader_escore" = lm_strong_cate3mean,
+  "Capbility_escore" = lm_solve_cate3mean,
+  "ChinaSuit_escore" = lm_suit_cate3mean)
+
+results_mean3 <- msummary(mlist,
+         #output = "kableExtra",
+         stars = TRUE,
+         coef_rename = ls_ctrl,
+         gof_omit = "F",
+         coef_omit = "(Intercept)") # <3>
+results_mean3
+
+```
+1. 按照三分类：同时添加treat与escore和cate_over32(按照均值，只划分为高估和低估)，结果没有一个显著。如果去掉treat*cate_over32的交互项，只添加进cate_over32，leader显著(treat1:escore3_sum)。与此同时，escore3_sum对民主适合中国显著。
+2. 按照四分类：同时添加，只有treat1:cate_over42over对capability显著；只添加进cate_over32，leader显著(treat1:escore3_sum)。
 
 # Who
 ```{r}
 #| label: charachter
-#| 
+#| eval: false
+data <- data %>%
+  mutate(
+    diff_escore3 = escore3_sum - escore3_summean,
+    diff_escore3_abs = abs(escore3_sum - escore3_summean),
+    diff_escore4 = escore4_sum - escore4_summean,
+    diff_escore4_abs = abs(escore4_sum - escore4_summean)
+  )
+clm_cate4 <- lm(diff_escore4_abs ~age+party+edu+gender+race+rural+newspol+trustGover+nationalism,data = data)
+summary(clm_cate4)
+summary(m)
+ctable <- coef(summary(m))
+
+## p值
+p <- pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2
+ctable <- cbind(ctable, "p value" = p)
+ctable
+
+## 置信区间
+ci <- confint(m)
+exp(coef(m))
+exp(cbind(OR = coef(m), ci))
+
+library(brant)
+brant(pl_cate4)
 ```
 
 
