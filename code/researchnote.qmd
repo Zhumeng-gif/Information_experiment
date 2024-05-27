@@ -267,6 +267,8 @@ data$cate_over3 <- relevel(data$cate_over3,ref = "right")
 data$cate_over4 <- factor(data$cate_over4,levels = c(-1,0,1),labels = c("under","right","over"))
 data$cate_over4 <- relevel(data$cate_over4,ref = "right")
 ```
+1. 题干中是最高民主价值观越低，因此要转换
+2. across函数跨列操作，另外将因子(factor)转化成数值(numeric)，可能会造成数据改变，因此要先转化成字符型(character),再转化成数值 y = as.numeric(as.character(x))。好在这里的数据一开始都是字符型。
 
 ::: {.callout-warning collapse="true"}
 目前民主肯定性回答的只包括1/2/3/5，4 不太像。
@@ -290,9 +292,6 @@ fig1 <- data %>%
   geom_histogram(bins = 30)
 fig1
 ```
-
-1. 题干中是最高民主价值观越低，因此要转换
-2. across函数跨列操作，另外将因子(factor)转化成数值(numeric)，可能会造成数据改变，因此要先转化成字符型(character),再转化成数值 y = as.numeric(as.character(x))。好在这里的数据一开始都是字符型。
 
 ## table1: Balance Test bettween Control and Treat
 

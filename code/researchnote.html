@@ -186,7 +186,7 @@ Important
 <div class="cell" data-code-annotations="below">
 <details>
 <summary>Code</summary>
-<div class="sourceCode cell-code" id="annotated-cell-2"><pre class="sourceCode r code-annotation-code code-with-copy"><code class="sourceCode r"><span id="annotated-cell-2-1"><a href="#annotated-cell-2-1" aria-hidden="true" tabindex="-1"></a><span class="do">## control variable</span></span>
+<div class="sourceCode cell-code" id="annotated-cell-2"><pre class="sourceCode r code-annotation-code code-with-copy code-annotated"><code class="sourceCode r"><span id="annotated-cell-2-1"><a href="#annotated-cell-2-1" aria-hidden="true" tabindex="-1"></a><span class="do">## control variable</span></span>
 <span id="annotated-cell-2-2"><a href="#annotated-cell-2-2" aria-hidden="true" tabindex="-1"></a>data<span class="sc">$</span>newspol <span class="ot">&lt;-</span> <span class="dv">6</span> <span class="sc">-</span> data<span class="sc">$</span>newspol</span>
 <span id="annotated-cell-2-3"><a href="#annotated-cell-2-3" aria-hidden="true" tabindex="-1"></a>data<span class="sc">$</span>edu <span class="ot">&lt;-</span> <span class="fu">Recode</span>(data<span class="sc">$</span>edu,<span class="st">"1:3 = 1;4:5 = 2;6:7 = 3;8:9 = 4"</span>)</span>
 <span id="annotated-cell-2-4"><a href="#annotated-cell-2-4" aria-hidden="true" tabindex="-1"></a>data<span class="sc">$</span>party <span class="ot">&lt;-</span> <span class="fu">Recode</span>(data<span class="sc">$</span>party,<span class="st">"2:4 = 0"</span>)</span>
@@ -199,7 +199,7 @@ Important
 <span id="annotated-cell-2-11"><a href="#annotated-cell-2-11" aria-hidden="true" tabindex="-1"></a></span>
 <span id="annotated-cell-2-12"><a href="#annotated-cell-2-12" aria-hidden="true" tabindex="-1"></a><span class="do">## outcome variable</span></span>
 <span id="annotated-cell-2-13"><a href="#annotated-cell-2-13" aria-hidden="true" tabindex="-1"></a>data<span class="sc">$</span>demSolve <span class="ot">&lt;-</span> <span class="fu">Recode</span>(data<span class="sc">$</span>M3,<span class="st">"2 = 0"</span>)</span>
-<span id="annotated-cell-2-14"><a href="#annotated-cell-2-14" aria-hidden="true" tabindex="-1"></a>data<span class="sc">$</span>M4__1 <span class="ot">&lt;-</span> <span class="dv">5</span> <span class="sc">-</span> data<span class="sc">$</span>M4__1</span>
+<button class="code-annotation-anchor" data-target-cell="annotated-cell-2" data-target-annotation="1">1</button><span id="annotated-cell-2-14" class="code-annotation-target"><a href="#annotated-cell-2-14" aria-hidden="true" tabindex="-1"></a>data<span class="sc">$</span>M4__1 <span class="ot">&lt;-</span> <span class="dv">5</span> <span class="sc">-</span> data<span class="sc">$</span>M4__1</span>
 <span id="annotated-cell-2-15"><a href="#annotated-cell-2-15" aria-hidden="true" tabindex="-1"></a>data<span class="sc">$</span>M4__2 <span class="ot">&lt;-</span> <span class="dv">5</span> <span class="sc">-</span> data<span class="sc">$</span>M4__2</span>
 <span id="annotated-cell-2-16"><a href="#annotated-cell-2-16" aria-hidden="true" tabindex="-1"></a>data<span class="sc">$</span>M4__3 <span class="ot">&lt;-</span> <span class="dv">5</span> <span class="sc">-</span> data<span class="sc">$</span>M4__3</span>
 <span id="annotated-cell-2-17"><a href="#annotated-cell-2-17" aria-hidden="true" tabindex="-1"></a>data<span class="sc">$</span>M4__5 <span class="ot">&lt;-</span> <span class="dv">5</span> <span class="sc">-</span> data<span class="sc">$</span>M4__5</span>
@@ -325,7 +325,7 @@ Important
 <span id="annotated-cell-2-137"><a href="#annotated-cell-2-137" aria-hidden="true" tabindex="-1"></a></span>
 <span id="annotated-cell-2-138"><a href="#annotated-cell-2-138" aria-hidden="true" tabindex="-1"></a>rawdata <span class="ot">&lt;-</span> data </span>
 <span id="annotated-cell-2-139"><a href="#annotated-cell-2-139" aria-hidden="true" tabindex="-1"></a></span>
-<span id="annotated-cell-2-140"><a href="#annotated-cell-2-140" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> data <span class="sc">%&gt;%</span></span>
+<button class="code-annotation-anchor" data-target-cell="annotated-cell-2" data-target-annotation="2">2</button><span id="annotated-cell-2-140" class="code-annotation-target"><a href="#annotated-cell-2-140" aria-hidden="true" tabindex="-1"></a>data <span class="ot">&lt;-</span> data <span class="sc">%&gt;%</span></span>
 <span id="annotated-cell-2-141"><a href="#annotated-cell-2-141" aria-hidden="true" tabindex="-1"></a>  dplyr<span class="sc">::</span><span class="fu">mutate</span>(</span>
 <span id="annotated-cell-2-142"><a href="#annotated-cell-2-142" aria-hidden="true" tabindex="-1"></a>    <span class="at">escore4_summean =</span> <span class="fu">mean</span>(escore4_sum),</span>
 <span id="annotated-cell-2-143"><a href="#annotated-cell-2-143" aria-hidden="true" tabindex="-1"></a>    <span class="at">escore3_summean =</span> <span class="fu">mean</span>(escore3_sum),</span>
@@ -357,8 +357,20 @@ Important
 <span id="annotated-cell-2-169"><a href="#annotated-cell-2-169" aria-hidden="true" tabindex="-1"></a>data<span class="sc">$</span>cate_over3 <span class="ot">&lt;-</span> <span class="fu">relevel</span>(data<span class="sc">$</span>cate_over3,<span class="at">ref =</span> <span class="st">"right"</span>)</span>
 <span id="annotated-cell-2-170"><a href="#annotated-cell-2-170" aria-hidden="true" tabindex="-1"></a></span>
 <span id="annotated-cell-2-171"><a href="#annotated-cell-2-171" aria-hidden="true" tabindex="-1"></a>data<span class="sc">$</span>cate_over4 <span class="ot">&lt;-</span> <span class="fu">factor</span>(data<span class="sc">$</span>cate_over4,<span class="at">levels =</span> <span class="fu">c</span>(<span class="sc">-</span><span class="dv">1</span>,<span class="dv">0</span>,<span class="dv">1</span>),<span class="at">labels =</span> <span class="fu">c</span>(<span class="st">"under"</span>,<span class="st">"right"</span>,<span class="st">"over"</span>))</span>
-<span id="annotated-cell-2-172"><a href="#annotated-cell-2-172" aria-hidden="true" tabindex="-1"></a>data<span class="sc">$</span>cate_over4 <span class="ot">&lt;-</span> <span class="fu">relevel</span>(data<span class="sc">$</span>cate_over4,<span class="at">ref =</span> <span class="st">"right"</span>)</span></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
+<span id="annotated-cell-2-172"><a href="#annotated-cell-2-172" aria-hidden="true" tabindex="-1"></a>data<span class="sc">$</span>cate_over4 <span class="ot">&lt;-</span> <span class="fu">relevel</span>(data<span class="sc">$</span>cate_over4,<span class="at">ref =</span> <span class="st">"right"</span>)</span><div class="code-annotation-gutter-bg"></div><div class="code-annotation-gutter"></div></code><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></pre></div>
 </details>
+<div class="cell-annotation">
+<dl class="code-annotation-container-hidden code-annotation-container-grid">
+<dt data-target-cell="annotated-cell-2" data-target-annotation="1">1</dt>
+<dd>
+<span data-code-cell="annotated-cell-2" data-code-lines="14" data-code-annotation="1">题干中是最高民主价值观越低，因此要转换</span>
+</dd>
+<dt data-target-cell="annotated-cell-2" data-target-annotation="2">2</dt>
+<dd>
+<span data-code-cell="annotated-cell-2" data-code-lines="140" data-code-annotation="2">across函数跨列操作，另外将因子(factor)转化成数值(numeric)，可能会造成数据改变，因此要先转化成字符型(character),再转化成数值 y = as.numeric(as.character(x))。好在这里的数据一开始都是字符型。</span>
+</dd>
+</dl>
+</div>
 </div>
 <div class="callout callout-style-default callout-warning callout-titled">
 <div class="callout-header d-flex align-content-center" data-bs-toggle="collapse" data-bs-target=".callout-3-contents" aria-controls="callout-3" aria-expanded="false" aria-label="Toggle callout">
@@ -412,10 +424,6 @@ Important
 </div>
 </div>
 </div>
-<ol type="1">
-<li>题干中是最高民主价值观越低，因此要转换</li>
-<li>across函数跨列操作，另外将因子(factor)转化成数值(numeric)，可能会造成数据改变，因此要先转化成字符型(character),再转化成数值 y = as.numeric(as.character(x))。好在这里的数据一开始都是字符型。</li>
-</ol>
 </section>
 <section id="table1-balance-test-bettween-control-and-treat" class="level2">
 <h2 class="anchored" data-anchor-id="table1-balance-test-bettween-control-and-treat">table1: Balance Test bettween Control and Treat</h2>
@@ -438,7 +446,7 @@ Important
 <dl class="code-annotation-container-hidden code-annotation-container-grid">
 <dt data-target-cell="annotated-cell-4" data-target-annotation="4">4</dt>
 <dd>
-<span data-code-cell="annotated-cell-4" data-code-annotation="4" data-code-lines="11">这里默认输出的是tinytable格式，也可以使用gt格式。</span>
+<span data-code-cell="annotated-cell-4" data-code-lines="11" data-code-annotation="4">这里默认输出的是tinytable格式，也可以使用gt格式。</span>
 </dd>
 </dl>
 </div>
@@ -784,15 +792,15 @@ Warning
 <dl class="code-annotation-container-hidden code-annotation-container-grid">
 <dt data-target-cell="annotated-cell-5" data-target-annotation="6">6</dt>
 <dd>
-<span data-code-cell="annotated-cell-5" data-code-annotation="6" data-code-lines="7">如果要误差棒给出95%的置信区间，可添加#fun.data = ~mean_se(., mult = 1.96))</span>
+<span data-code-cell="annotated-cell-5" data-code-lines="7" data-code-annotation="6">如果要误差棒给出95%的置信区间，可添加#fun.data = ~mean_se(., mult = 1.96))</span>
 </dd>
 <dt data-target-cell="annotated-cell-5" data-target-annotation="7">7</dt>
 <dd>
-<span data-code-cell="annotated-cell-5" data-code-annotation="7" data-code-lines="6">fig2为误差柱状图；fig3为误差条图。</span>
+<span data-code-cell="annotated-cell-5" data-code-lines="6" data-code-annotation="7">fig2为误差柱状图；fig3为误差条图。</span>
 </dd>
 <dt data-target-cell="annotated-cell-5" data-target-annotation="8">8</dt>
 <dd>
-<span data-code-cell="annotated-cell-5" data-code-annotation="8" data-code-lines="19">和oob = scales::oob_keep所起的作用一样。</span>
+<span data-code-cell="annotated-cell-5" data-code-lines="19" data-code-annotation="8">和oob = scales::oob_keep所起的作用一样。</span>
 </dd>
 </dl>
 </div>
@@ -1832,7 +1840,7 @@ window.addEventListener('load', function () { styleCell_tinytable_1bblmadysil404
 <dl class="code-annotation-container-hidden code-annotation-container-grid">
 <dt data-target-cell="annotated-cell-14" data-target-annotation="3">3</dt>
 <dd>
-<span data-code-cell="annotated-cell-14" data-code-annotation="3" data-code-lines="49">gof_omit和coef_omit的区别：coef_omit去掉变量中的variable,gof_omit去掉结果中的变量。</span>
+<span data-code-cell="annotated-cell-14" data-code-lines="49" data-code-annotation="3">gof_omit和coef_omit的区别：coef_omit去掉变量中的variable,gof_omit去掉结果中的变量。</span>
 </dd>
 </dl>
 </div>
