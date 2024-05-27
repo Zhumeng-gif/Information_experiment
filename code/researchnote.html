@@ -211,15 +211,15 @@ Important
 <dl class="code-annotation-container-hidden code-annotation-container-grid">
 <dt data-target-cell="annotated-cell-3" data-target-annotation="6">6</dt>
 <dd>
-<span data-code-cell="annotated-cell-3" data-code-lines="7" data-code-annotation="6">如果要误差棒给出95%的置信区间，可添加#fun.data = ~mean_se(., mult = 1.96))</span>
+<span data-code-lines="7" data-code-cell="annotated-cell-3" data-code-annotation="6">如果要误差棒给出95%的置信区间，可添加#fun.data = ~mean_se(., mult = 1.96))</span>
 </dd>
 <dt data-target-cell="annotated-cell-3" data-target-annotation="7">7</dt>
 <dd>
-<span data-code-cell="annotated-cell-3" data-code-lines="6" data-code-annotation="7">fig2为误差柱状图；fig3为误差条图。</span>
+<span data-code-lines="6" data-code-cell="annotated-cell-3" data-code-annotation="7">fig2为误差柱状图；fig3为误差条图。</span>
 </dd>
 <dt data-target-cell="annotated-cell-3" data-target-annotation="8">8</dt>
 <dd>
-<span data-code-cell="annotated-cell-3" data-code-lines="19" data-code-annotation="8">和oob = scales::oob_keep所起的作用一样。</span>
+<span data-code-lines="19" data-code-cell="annotated-cell-3" data-code-annotation="8">和oob = scales::oob_keep所起的作用一样。</span>
 </dd>
 </dl>
 </div>
@@ -314,7 +314,7 @@ Warning
 <dl class="code-annotation-container-hidden code-annotation-container-grid">
 <dt data-target-cell="annotated-cell-6" data-target-annotation="4">4</dt>
 <dd>
-<span data-code-cell="annotated-cell-6" data-code-lines="11" data-code-annotation="4">这里默认输出的是tinytable格式，也可以使用gt格式。</span>
+<span data-code-lines="11" data-code-cell="annotated-cell-6" data-code-annotation="4">这里默认输出的是tinytable格式，也可以使用gt格式。</span>
 </dd>
 </dl>
 </div>
@@ -1636,7 +1636,7 @@ Residuals   2485   5774   2.324               </code></pre>
 <dl class="code-annotation-container-hidden code-annotation-container-grid">
 <dt data-target-cell="annotated-cell-15" data-target-annotation="3">3</dt>
 <dd>
-<span data-code-cell="annotated-cell-15" data-code-lines="45" data-code-annotation="3">gof_omit和coef_omit的区别：coef_omit去掉变量中的variable,gof_omit去掉结果中的变量。</span>
+<span data-code-lines="45" data-code-cell="annotated-cell-15" data-code-annotation="3">gof_omit和coef_omit的区别：coef_omit去掉变量中的variable,gof_omit去掉结果中的变量。</span>
 </dd>
 </dl>
 </div>
@@ -3551,7 +3551,7 @@ window.addEventListener('load', function () { styleCell_tinytable_lpe9nwixe4k052
 <span id="cb14-5"><a href="#cb14-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">diff_escore4 =</span> escore4_sum <span class="sc">-</span> escore4_summean,</span>
 <span id="cb14-6"><a href="#cb14-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">diff_escore4_abs =</span> <span class="fu">abs</span>(escore4_sum <span class="sc">-</span> escore4_summean)</span>
 <span id="cb14-7"><a href="#cb14-7" aria-hidden="true" tabindex="-1"></a>  )</span>
-<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>clm_cate4 <span class="ot">&lt;-</span> <span class="fu">lm</span>(diff_escore4_abs <span class="sc">~</span>age<span class="sc">+</span>party<span class="sc">+</span>edu<span class="sc">+</span>gender<span class="sc">+</span>race<span class="sc">+</span>rural<span class="sc">+</span>newspol<span class="sc">+</span>trustGover<span class="sc">+</span>nationalism,<span class="at">data =</span> data)</span>
+<span id="cb14-8"><a href="#cb14-8" aria-hidden="true" tabindex="-1"></a>clm_cate4 <span class="ot">&lt;-</span> <span class="fu">lm</span>(cate_over32 <span class="sc">~</span>age<span class="sc">+</span>party<span class="sc">+</span>edu<span class="sc">+</span>gender<span class="sc">+</span>race<span class="sc">+</span>rural<span class="sc">+</span>newspol<span class="sc">+</span>trustGover<span class="sc">+</span>nationalism,<span class="at">data =</span> data)</span>
 <span id="cb14-9"><a href="#cb14-9" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(clm_cate4)</span>
 <span id="cb14-10"><a href="#cb14-10" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(m)</span>
 <span id="cb14-11"><a href="#cb14-11" aria-hidden="true" tabindex="-1"></a>ctable <span class="ot">&lt;-</span> <span class="fu">coef</span>(<span class="fu">summary</span>(m))</span>

@@ -569,8 +569,11 @@ data <- data %>%
     diff_escore4 = escore4_sum - escore4_summean,
     diff_escore4_abs = abs(escore4_sum - escore4_summean)
   )
-clm_cate4 <- lm(diff_escore4_abs ~age+party+edu+gender+race+rural+newspol+trustGover+nationalism,data = data)
-summary(clm_cate4)
+data$trustGovermax <- Recode(data$trustGover,"1:2 = 0;3:4 = 1")
+data$trustLocalmax <- Recode(data$trustLocal,"1:2 = 0;3:4 = 1")
+
+lm_diff_escore4 <- lm(diff_escore4 ~age+party+edu+gender+race+rural+newspol+trustGovermax+incomeFam_level,binomial,data = data)
+summary(lm_diff_escore4)
 summary(m)
 ctable <- coef(summary(m))
 
@@ -583,10 +586,15 @@ ctable
 ci <- confint(m)
 exp(coef(m))
 exp(cbind(OR = coef(m), ci))
-
-library(brant)
-brant(pl_cate4)
 ```
 
+1. 因子类(有序和无序)都不行：没有polr是因为平行性检验不通过(比例相等)，目前采用clm，放宽假设。或者看一下无序怎么样，但结果应该差不多。
+中央政府完全没影响，如果换成max，对cate_over32的显著度为10%，方向为负，也不满足。地方政府对cate_over32和cate_over42都显著，方向为正，与中央的相反。
+2. 做差：
+ - 中央政府
+   - trustGovermax的话，对diff_escore4的影响是显著正面影响，diff_escore3的显著性只达到10%。
+   - trustGover则对上述因变量没有影响。
+ - 地方政府：
+   - trustLocalmax对diff_escore4/diff_escore3的结果则不显著，但是trustLocal还是有影响的。trustLocalmax和trustGovermax同时放进去也只有中央政府显著。
 
 
