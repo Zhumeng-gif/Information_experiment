@@ -60,7 +60,7 @@ data <- data %>%
 
 data <-  data %>%
   dplyr::mutate(treat = case_when(
-    data$X1b != "NA" ~ 1, # <1>
+    data$X1b != "NA" ~ 1, 
     data$X1a != "NA" ~ 0
   ),
   age = 2024 - age)
@@ -77,12 +77,6 @@ data <-  data %>%
 
 ```
 
-
-::: {.callout-note collapse="true"}
-1. X1a是对照组；X1b为实验组。
-2. 注释代码单独挑选出实验组和对照组
-3. 一键注释：Ctrl+shift+C.
-:::
 
 :::{.callout-important collapse="true"}
 黄海峰在2011年的问卷中只涉及大学生，2014年包括一项大学生和一项在线网络调查。在给大学生的问题里面给出了中国作为参考(Huang2017a)；而2014年的网络调查没有出中国作为参考(Huang2015).可以看两篇文章的appendix以及Huang2017a里面的一段话。The online survey experiment and the college survey had the same topics for the socioeconomic information questions, while the answers for some questions were somewhat dif- ferent since the world’s socioeconomic conditions did not stay constant over the three years between the surveys. To give the students some bases for judgment (since some of the questions asked about somewhat abstract issues, e.g., income inequality), relevant statistics for China were provided in many of the socioeconomic questions in the college survey. The online survey experiment removed such reference information about China in the socioe- conomic questions to make sure the respondents’ answers were not primed by information about China.
@@ -226,38 +220,33 @@ data <- data %>%
       cate4_x6 == "1" ~ "1"
     )
   ) %>%
-  dplyr::mutate(across(.cols = cate4_x1:cate3_x6,.fns = as.numeric),
+  dplyr::mutate(across(.cols = cate4_x1:cate3_x6,.fns = as.numeric), # <2> 
          escore4_sum = rowSums( across(c(cate4_x1,cate4_x2,cate4_x3,cate4_x4,cate4_x5,cate4_x6))),
-         escore3_sum = rowSums(across(c(cate3_x1,cate3_x2,cate3_x3,cate3_x4,cate3_x5,cate3_x6)))
-         )
-
-rawdata <- data 
-
-data <- data %>%      # <2> 
-  dplyr::mutate(
-    escore4_summean = mean(escore4_sum),
-    escore3_summean = mean(escore3_sum),
-    escore3_sumsd = sd(escore3_sum), # <3>
-    escore4_sumsd = sd(escore4_sum)
-  )  %>%
+         escore3_sum = rowSums(across(c(cate3_x1,cate3_x2,cate3_x3,cate3_x4,cate3_x5,cate3_x6))),
+  across(.cols = c(escore4_sum,escore3_sum),.fns = list(mean = mean,sd = sd))
+  ) %>%
+  mutate(
+    diff_escore3 = escore3_sum - escore3_sum_mean,
+    diff_escore4 = escore4_sum - escore4_sum_mean
+  ) %>%
   mutate(
     cate_over3 = case_when(
-      `escore3_sum` >= `escore3_sumsd` ~ "1",
-      `escore3_sum` <=   (-1)*(`escore3_sumsd`) ~ "-1",
-      `escore3_sum` < `escore3_sumsd` &`escore3_sum` > (-1)*(`escore3_sumsd`) ~ "0"
+      `escore3_sum` >= `escore3_sum_sd` ~ "1",
+      `escore3_sum` <=   (-1)*(`escore3_sum_sd`) ~ "-1",
+      `escore3_sum` < `escore3_sum_sd` &`escore3_sum` > (-1)*(`escore3_sum_sd`) ~ "0"
     ),
     cate_over4 = case_when(
-      `escore4_sum` >= `escore4_sumsd` ~ "1",
-      `escore4_sum` <=   (-1)*(`escore4_sumsd`) ~ "-1",
-      `escore4_sum` < `escore4_sumsd` &`escore4_sum` > (-1)*(`escore4_sumsd`) ~ "0"
+      `escore4_sum` >= `escore4_sum_sd` ~ "1",
+      `escore4_sum` <=   (-1)*(`escore4_sum_sd`) ~ "-1",
+      `escore4_sum` < `escore4_sum_sd` &`escore4_sum` > (-1)*(`escore4_sum_sd`) ~ "0"
     ),
     cate_over32 = case_when(
-      `escore3_sum` >= escore3_summean ~ 1,
-      `escore3_sum` < escore3_summean ~ 0
+      `escore3_sum` >= escore3_sum_mean ~ 1,
+      `escore3_sum` < escore3_sum_mean ~ 0
     ),
     cate_over42 = case_when(
-     `escore4_sum` >= escore4_summean ~ 1,
-     `escore4_sum` < escore4_summean ~ 0 
+     `escore4_sum` >= escore4_sum_mean ~ 1,
+     `escore4_sum` < escore4_sum_mean ~ 0
     )
   )
 
@@ -280,7 +269,8 @@ data$cate_over4 <- relevel(data$cate_over4,ref = "right")
 2.过度高估和低估除了用标准差，直接用均值的效果怎么样，以及用数值减去均值怎么样？
 :::
 
-# 
+# sd_group
+
 ## fig1：The Respondents’ Score about TaiWan
 
 ```{r}
@@ -332,7 +322,7 @@ table1 # <4>
 # fi2 # <7> 
                #fun.data = ~mean_se(., mult = 1.96)) # <6>
 
-fig3 <- data %>% 
+fig2 <- data %>% 
   ggplot(aes(x = treat, y = demStrong)) +
   stat_summary(fun.data = "mean_se",
                geom = "errorbar",
@@ -341,18 +331,19 @@ fig3 <- data %>%
                linewidth = .8) +  
   stat_summary(fun = "mean", geom = "point",size = 2.5) +
   labs(x="Treat",y = "Evaluation",title = "Evaluation among Different Groups about StrongLeader") +
-  scale_y_continuous(limits=c(2.6,2.8),oob = scales::oob_keep)
-  #coord_cartesian(ylim=c(2.6,2.8)) #<8>
-fig3
+  #scale_y_continuous(limits=c(2.6,2.8),oob = scales::oob_keep) #<8>
+  coord_cartesian(ylim=c(2.6,2.8)) 
+fig2
 
 ```
 
 6. 如果要误差棒给出95%的置信区间，可添加#fun.data = ~mean_se(., mult = 1.96))
 7. fig2为误差柱状图；fig3为误差条图。
-8. 和oob = scales::oob_keep所起的作用一样。
+8. oob = scales::oob_keep和coord_cartesian所起的作用一样。
 
 
 ## Distribution of Overestimation and Underestimation in Control and Treat
+### table2
 ```{r}
 #| label: tabe2
 #| tbl-cap: Distribution of Overestimation and Underestimation in Control and Treat
@@ -377,6 +368,17 @@ table2
 #                       sparse_header=FALSE)
 # table3
 ```
+### fig3
+```{r}
+fig3 <- data %>%
+  ggplot(aes(x = cate_over3)) +
+  geom_bar(width = 0.4,fill = c("#999999","#A6A587","#EF9600","#999999","#A6A587","#EF9600")) +
+  labs(x = "Gourp",y = "Number of Over and Under") +
+  facet_grid(. ~ treat)
+  
+fig3
+```
+
 
 
 ## T-test
@@ -431,8 +433,8 @@ balance_right
 # summary(aov_right)
 ```
 
-# Regression
-## sd_cate
+## Regression
+
 ### cate4
 ```{r}
 #| label: regression_cate4
@@ -540,23 +542,56 @@ results_cate3
 3. 综上所述，所有结果中对政治强人的结果比较好(即M5的几个问题)，其次是民主是否适合中国(M1)和能力(M3)，对制度自信(M6)和民主积极观念(M4)没影响。
 
 
-## mean_cate
-```{r}
-#| label: mean group
-#| eval: false
-data$cate_over42 <- factor(data$cate_over42,levels = c(0,1),labels = c("under","over"))
+# mean_group
 
-lm_positive_cate3mean <- lm(dempositive ~ treat *escore4_sum+cate_over42+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
-lm_strong_cate3mean <- lm(demStrong ~ treat *escore4_sum+cate_over42+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
-lm_solve_cate3mean <- lm(demSolve ~ treat *escore4_sum+cate_over42+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
-lm_suit_cate3mean <- lm(demSuit ~ treat *escore4_sum+cate_over42+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
+## fig_mean
+```{r}
+#| label: mean_group fig
+#| fig-cap: The over and under between control and treat
+# data %>% group_by(treat) %>%
+#   count(cate_over32)
+
+data$cate_over42 <- factor(data$cate_over42,levels = c(0,1),labels = c("under","over"))
+data$cate_over32 <- factor(data$cate_over32,levels = c(0,1),labels = c("under","over"))
+
+fig4 <- data %>%
+  ggplot(aes(x = cate_over32)) +
+  geom_bar(width = 0.4,fill = c("#999999","#EF9600","#999999","#EF9600")) +
+  labs(x = "Gourp",y = "Number of Over and Under") +
+  facet_grid(. ~ treat)
+  
+fig4
+```
+
+
+## Ression
+### mean_cate3
+```{r}
+#| label: regression_meancate3
+lm_positive_cate3mean <- lm(dempositive ~ treat *diff_escore3+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
+lm_strong_cate3mean <- lm(demStrong ~ treat *diff_escore3+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
+lm_system_cate3mean <- lm(demsystem ~ treat *diff_escore3+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
+lm_solve_cate3mean <- lm(demSolve ~ treat *diff_escore3+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
+lm_suit_cate3mean <- lm(demSuit ~ treat *diff_escore3+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
+
+lm_positive_cate3meanplus <- lm(dempositive ~ treat *diff_escore3+cate_over32+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
+lm_strong_cate3meanplus <- lm(demStrong ~ treat *diff_escore3+cate_over32+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
+lm_system_cate3meanplus <- lm(demsystem ~ treat *diff_escore3+cate_over32+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
+lm_solve_cate3meanplus <- lm(demSolve ~ treat *diff_escore3+cate_over32+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
+lm_suit_cate3meanplus <- lm(demSuit ~ treat *diff_escore3+cate_over32+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
 
 
 mlist <- list(
   "Dempositive_escore" = lm_positive_cate3mean,
+  "Dempositive_escore" = lm_positive_cate3meanplus,
   "StrongLeader_escore" = lm_strong_cate3mean,
+  "StrongLeader_escore" = lm_strong_cate3meanplus,
+  "SystemCapbility" = lm_system_cate3mean,
+  "SystemCapbility" = lm_system_cate3meanplus,
   "Capbility_escore" = lm_solve_cate3mean,
-  "ChinaSuit_escore" = lm_suit_cate3mean)
+  "Capbility_escore" = lm_solve_cate3meanplus,
+  "ChinaSuit_escore" = lm_suit_cate3mean,
+  "ChinaSuit_escore" = lm_suit_cate3meanplus)
 
 results_mean3 <- msummary(mlist,
          #output = "kableExtra",
@@ -568,25 +603,72 @@ results_mean3
 
 ```
 
-1. 按照三分类：同时添加treat与escore和cate_over32(按照均值，只划分为高估和低估)，结果没有一个显著。如果去掉treat*cate_over32的交互项，只添加进cate_over32，leader显著(treat1:escore3_sum)。与此同时，escore3_sum对民主适合中国显著。
-2. 按照四分类：同时添加，只有treat1:cate_over42over对capability显著；只添加进cate_over32，leader显著(treat1:escore3_sum)。
+### mean_cate4
+```{r}
+#| label: regression_meancate4
+lm_positive_cate4mean <- lm(dempositive ~ treat *diff_escore4+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
+lm_strong_cate4mean <- lm(demStrong ~ treat *diff_escore4+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
+lm_system_cate4mean <- lm(demsystem ~ treat *diff_escore4+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
+lm_solve_cate4mean <- lm(demSolve ~ treat *diff_escore4+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
+lm_suit_cate4mean <- lm(demSuit ~ treat *diff_escore4+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
+
+lm_positive_cate4meanplus <- lm(dempositive ~ treat *diff_escore4+cate_over42+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
+lm_strong_cate4meanplus <- lm(demStrong ~ treat *diff_escore4+cate_over42+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
+lm_system_cate4meanplus <- lm(demsystem ~ treat *diff_escore4+cate_over42+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
+lm_solve_cate4meanplus <- lm(demSolve ~ treat *diff_escore4+cate_over42+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
+lm_suit_cate4meanplus <- lm(demSuit ~ treat *diff_escore4+cate_over42+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
+
+
+mlist <- list(
+  "Dempositive_escore" = lm_positive_cate4mean,
+  "Dempositive_escore" = lm_positive_cate4meanplus,
+  "StrongLeader_escore" = lm_strong_cate4mean,
+  "StrongLeader_escore" = lm_strong_cate4meanplus,
+  "SystemCapbility" = lm_system_cate4mean,
+  "SystemCapbility" = lm_system_cate4meanplus,
+  "Capbility_escore" = lm_solve_cate4mean,
+  "Capbility_escore" = lm_solve_cate4meanplus,
+  "ChinaSuit_escore" = lm_suit_cate4mean,
+  "ChinaSuit_escore" = lm_suit_cate4meanplus)
+
+results_mean4 <- msummary(mlist,
+         #output = "kableExtra",
+         stars = TRUE,
+         coef_rename = ls_ctrl,
+         gof_omit = "F",
+         coef_omit = "(Intercept)") # <3>
+results_mean4
+
+```
+
+1. 直接使用原始得分和按照均值划分高低估组的结果：
+  - 按照三分类：同时添加treat与escore和cate_over32(按照均值，只划分为高估和低估)，结果没有一个显著。如果去掉treat*cate_over32的交互项，只添加进cate_over32，leader显著(treat1:escore3_sum)。与此同时，escore3_sum对民主适合中国显著。
+  - 按照四分类：同时添加，只有treat1:cate_over42over对capability显著；只添加进cate_over32，leader显著(treat1:escore3_sum)。
+2. 不直接使用原始得分，而是使用差值和高低估组，差值越大表明越高估（没有取绝对值）：
+  - 三分类：对leader和民主适合中国非常有影响，make sense；
+  - 四分类：交互项还是只对leader有影响。
+
+
 
 # Who
+
+## political trust
 ```{r}
 #| label: charachter
-#| eval: false
-data <- data %>%
-  mutate(
-    diff_escore3 = escore3_sum - escore3_summean,
-    diff_escore3_abs = abs(escore3_sum - escore3_summean),
-    diff_escore4 = escore4_sum - escore4_summean,
-    diff_escore4_abs = abs(escore4_sum - escore4_summean)
-  )
-data$trustGovermax <- Recode(data$trustGover,"1:2 = 0;3:4 = 1")
-data$trustLocalmax <- Recode(data$trustLocal,"1:2 = 0;3:4 = 1")
 
-lm_diff_escore4 <- lm(diff_escore4 ~age+party+edu+gender+race+rural+newspol+trustGovermax+trustLocalmax+incomeFam_level,binomial,data = data)
-summary(lm_diff_escore4)
+data$trustGovermax <- factor(Recode(data$trustGover,"1:2 = 0;3:4 = 1"),levels = c(0,1),labels = c("High","Low"))
+data$trustLocalmax <- factor(Recode(data$trustLocal,"1:2 = 0;3:4 = 1"),levels = c(0,1),labels = c("High","Low"))
+
+fig5 <- data %>%
+  ggplot(aes(x = cate_over32)) +
+  geom_bar(width = 0.4,fill = c("#999999","#EF9600","#999999","#EF9600")) +
+  labs(x = "Trust to Central Government",y = "Number of Over and Under") +
+  facet_grid(. ~ trustGovermax)
+  
+fig5
+
+# lm_diff_escore4 <- lm(diff_escore4 ~age+party+edu+gender+race+rural+newspol+trustGovermax+trustLocalmax+incomeFam_level,binomial,data = data)
+# summary(lm_diff_escore4)
 ```
 
 1. 因子类(有序和无序)都不行：没有polr是因为平行性检验不通过(比例相等)，目前采用clm，放宽假设。或者看一下无序怎么样，但结果应该差不多。
