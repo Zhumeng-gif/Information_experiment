@@ -123,7 +123,7 @@ data$demStrong <- data %>%
   dplyr::select(.,M5__1,M5__2,M5__3,M5__4) %>%
   rowMeans(na.rm = TRUE) 
 
-data$nationalism <- data %>%
+data$demsystem <- data %>%
   dplyr::select(.,M6__1,M6__2,M6__3,M6__4) %>%
   rowMeans(na.rm = TRUE)
 
@@ -268,9 +268,62 @@ data$cate_over4 <- factor(data$cate_over4,levels = c(-1,0,1),labels = c("under",
 data$cate_over4 <- relevel(data$cate_over4,ref = "right")
 ```
 
+::: {.callout-warning collapse="true"}
+目前民主肯定性回答的只包括1/2/3/5，4 不太像。
+:::
+
+::: {.callout-important}
+1.这里求标准差需要注意的是到底是先分组再求还是在所有人中求。结果肯定不一样，目前直接求。
+
+2.过度高估和低估除了用标准差，直接用均值的效果怎么样，以及用数值减去均值怎么样？
+:::
+
+# 
+## fig1：The Respondents’ Score about TaiWan
 
 ```{r}
-#| label: fig-error
+#| label: fig1
+#| fig-cap: The Respondents’ Score about TaiWan
+#| fig-cap-location: top
+fig1 <- data %>%
+  ggplot(.,aes(x = escore4_sum)) +
+  geom_histogram(bins = 30)
+fig1
+```
+
+1. 题干中是最高民主价值观越低，因此要转换
+2. across函数跨列操作，另外将因子(factor)转化成数值(numeric)，可能会造成数据改变，因此要先转化成字符型(character),再转化成数值 y = as.numeric(as.character(x))。好在这里的数据一开始都是字符型。
+
+## table1: Balance Test bettween Control and Treat
+
+```{r}
+#| label: tbl-tre2con
+#| tbl-cap: "Balance table"
+#| eval: true
+
+table1 <- data %>%
+  dplyr::select(.,treat,age,gender,edu,party,marriage,incomeFam_level,occ,newspol,internetuse) %>%
+  datasummary_balance(
+  ~ treat,
+  data = .,
+  title = "Balance Description",
+  stars = TRUE,
+  output = "tinytable" 
+)     
+#save_tt("../outputs/table1.docx")
+table1 # <4>
+```
+4. 这里默认输出的是tinytable格式，也可以使用gt格式。
+
+::: {.callout-warning collapse="true"}
+定制化表格后，如果要保存文件见<https://modelsummary.com/vignettes/appearance.html>部分Warning: Saving to file
+:::
+
+## fig2: The Error test between Control and Treat
+
+```{r}
+#| label: fig2
+#| fig-cap: The Error test between Control and Treat
 
 # fi2 <- data %>% 
 #   ggplot(aes(treat, demStrong)) +
@@ -288,74 +341,22 @@ fig3 <- data %>%
                colour = c("#999999","#E69F00"),
                linewidth = .8) +  
   stat_summary(fun = "mean", geom = "point",size = 2.5) +
-  labs(x="Treat",y = "Evaluation",title = "Evaluation among Different Groups") +
+  labs(x="Treat",y = "Evaluation",title = "Evaluation among Different Groups about StrongLeader") +
   scale_y_continuous(limits=c(2.6,2.8),oob = scales::oob_keep)
   #coord_cartesian(ylim=c(2.6,2.8)) #<8>
 fig3
 
 ```
+
 6. 如果要误差棒给出95%的置信区间，可添加#fun.data = ~mean_se(., mult = 1.96))
 7. fig2为误差柱状图；fig3为误差条图。
 8. 和oob = scales::oob_keep所起的作用一样。
 
+
+## Distribution of Overestimation and Underestimation in Control and Treat
 ```{r}
-# temp <- data %>%
-#   select(.,id,escore4_sum,escore4_sumsd,escore3_sum,escore3_sumsd,cate_over4,cate_over3)
-```
-
-::: {.callout-important}
-1.这里求标准差需要注意的是到底是先分组再求还是在所有人中求。结果肯定不一样，目前直接求。
-
-2.过度高估和低估除了用标准差，直接用均值的效果怎么样，以及用数值减去均值怎么样？
-:::
-
-# fig1
-
-```{r}
-#| label: fig1
-#| fig-cap: The Respondents’ Evaluation about TaiWan
-#| fig-cap-location: top
-fig1 <- data %>%
-  ggplot(.,aes(x = escore4_sum)) +
-  geom_histogram(bins = 30)
-fig1
-```
-
-1. 题干中是最高民主价值观越低，因此要转换
-2. across函数跨列操作，另外将因子(factor)转化成数值(numeric)，可能会造成数据改变，因此要先转化成字符型(character),再转化成数值 y = as.numeric(as.character(x))。好在这里的数据一开始都是字符型。
-
-::: {.callout-warning collapse="true"}
-目前民主肯定性回答的只包括1/2/3/5，2/4 不太像。
-:::
-
-
-## table1
-
-```{r}
-#| label: tbl-tre2con
-#| tbl-cap: "Balance table"
-#| eval: true
-
-table1 <- data %>%
-  dplyr::select(.,treat,age,gender,edu,party,marriage,incomeFam_level,occ,newspol,internetuse,nationalism) %>%
-  datasummary_balance(
-  ~ treat,
-  data = .,
-  title = "Balance Description",
-  stars = TRUE,
-  output = "tinytable" 
-)     
-#save_tt("../outputs/table1.docx")
-table1 # <4>
-```
-4. 这里默认输出的是tinytable格式，也可以使用gt格式。
-
-::: {.callout-warning collapse="true"}
-定制化表格后，如果要保存文件见<https://modelsummary.com/vignettes/appearance.html>部分Warning: Saving to file
-:::
-
-## treat & estimate
-```{r}
+#| label: tabe2
+#| tbl-cap: Distribution of Overestimation and Underestimation in Control and Treat
 table2 <- data %>%
   dplyr::select(.,treat,cate_over4) %>%
   datasummary_crosstab(
@@ -379,13 +380,13 @@ table2
 ```
 
 
-## balance test(outcome variable)
+## T-test
 ### overestimate
 ```{r}
 #| lable: over
 data_over <- data %>%
   dplyr::filter(.,cate_over3 == "over") %>%
-  dplyr::select(.,treat,demSuit,demSolve,dempositive,demStrong) 
+  dplyr::select(.,treat,demSuit,demSolve,dempositive,demStrong,demsystem) 
 balance_over <- data_over %>%
   datasummary_balance(
     ~ treat,
@@ -393,8 +394,8 @@ balance_over <- data_over %>%
     stars = TRUE
   )
 balance_over
-aov_over <- aov(demStrong~ treat, data = data_over)
-summary(aov_over)
+# aov_over <- aov(demStrong~ treat, data = data_over)
+# summary(aov_over)
 ```
 
 ### underestimate
@@ -402,7 +403,7 @@ summary(aov_over)
 #| lable: under
 data_under <- data %>%
   dplyr::filter(.,cate_over3 == "under") %>%
-  dplyr::select(.,treat,demSuit,demSolve,dempositive,demStrong) 
+  dplyr::select(.,treat,demSuit,demSolve,dempositive,demStrong,demsystem) 
 balance_under <- data_under %>%
   datasummary_balance(
     ~ treat,
@@ -410,8 +411,8 @@ balance_under <- data_under %>%
     stars = TRUE
   )
 balance_under
-aov_under <- aov(demSuit ~ treat, data = data_under)
-summary(aov_under)
+# aov_under <- aov(demSuit ~ treat, data = data_under)
+# summary(aov_under)
 ```
 
 ### right
@@ -419,7 +420,7 @@ summary(aov_under)
 #| lable: right
 data_right <- data %>%
   dplyr::filter(.,cate_over3 == "right") %>%
-  dplyr::select(.,treat,demSuit,demSolve,dempositive,demStrong) 
+  dplyr::select(.,treat,demSuit,demSolve,dempositive,demStrong,demsystem) 
 balance_right <- data_right %>%
   datasummary_balance(
     ~ treat,
@@ -427,8 +428,8 @@ balance_right <- data_right %>%
     stars = TRUE
   )
 balance_right
-aov_right <- aov(demSuit ~ treat, data = data_right)
-summary(aov_right)
+# aov_right <- aov(demSuit ~ treat, data = data_right)
+# summary(aov_right)
 ```
 
 # Regression
@@ -460,17 +461,21 @@ lm_positive_cate4 <- lm(dempositive ~ treat * cate_over4+age+marriage+party+rura
 lm_strong_cate4 <- lm(demStrong ~ treat * cate_over4+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
 lm_solve_cate4 <- lm(demSolve ~ treat * cate_over4+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
 lm_suit_cate4 <- lm(demSuit ~ treat * cate_over4+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
+lm_demsystem_cate4 <- lm(demsystem ~ treat * cate_over4+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
 
 lm_positive_cate4plus <- lm(dempositive ~ treat *escore4_sum+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
 lm_strong_cate4plus <- lm(demStrong ~ treat *escore4_sum+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
 lm_solve_cate4plus <- lm(demSolve ~ treat *escore4_sum++age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
 lm_suit_cate4plus <- lm(demSuit ~ treat *escore4_sum+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
+lm_demsystem_cate4plus <- lm(demsystem ~ treat *escore4_sum+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
 
 mlist_cate4 <- list(
   "Dempositive" = lm_positive_cate4,
   "Dempositive_escore4" = lm_positive_cate4plus,
   "StrongLeader" = lm_strong_cate4,
   "StrongLeader_escore4" = lm_strong_cate4plus,
+  "SystemConfidence_escore4" = lm_demsystem_cate4,
+  "SystemConfidence" = lm_demsystem_cate4plus,
   "Capbility" = lm_solve_cate4,
   "Capbility_escore4" = lm_solve_cate4plus,
   "ChinaSuit" = lm_suit_cate4,
@@ -493,17 +498,21 @@ lm_positive_cate3 <- lm(dempositive ~ treat * cate_over3+age+marriage+party+rura
 lm_strong_cate3 <- lm(demStrong ~ treat * cate_over3+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
 lm_solve_cate3 <- lm(demSolve ~ treat * cate_over3+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
 lm_suit_cate3 <- lm(demSuit ~ treat * cate_over3+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
+lm_demsystem_cate3 <- lm(demsystem ~ treat * cate_over3+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
 
 lm_positive_cate3plus <- lm(dempositive ~ treat *escore3_sum+treat*cate_over3+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
 lm_strong_cate3plus <- lm(demStrong ~ treat *escore3_sum+treat*cate_over3+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
 lm_solve_cate3plus <- lm(demSolve ~ treat *escore3_sum+treat*cate_over3+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
 lm_suit_cate3plus <- lm(demSuit ~ treat *escore3_sum+treat*cate_over3+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
+lm_demsystem_cate3plus <- lm(demsystem ~ treat *escore3_sum+age+marriage+party+rural+race+gender+newspol+internetuse+edu,data = data)
 
 mlist_cate3 <- list(
   "Dempositive" = lm_positive_cate3,
   "Dempositive_escore" = lm_positive_cate3plus,
   "StrongLeader" = lm_strong_cate3,
   "StrongLeader_escore" = lm_strong_cate3plus,
+  "SystemConfidence" = lm_demsystem_cate3,
+  "SystemConfidence_escore" = lm_demsystem_cate3plus,
   "Capbility" = lm_solve_cate3,
   "Capbility_escore" = lm_solve_cate3plus,
   "ChinaSuit" = lm_suit_cate3,
@@ -518,14 +527,18 @@ results_cate3 <- msummary(mlist_cate3,
 results_cate3
 ```
 
+
 结果：
 1. 按照三分类的话(cate_over3)，交互项只对政治强人有正面影响；
+
 2. 上面的结论都是没有添加原本得分，但是添加原本得分之后结果的显著性以及交互项的显著性会好点：
- - 以escore3_sum为列：escore3_sum与strong为负显著，交互项以及各自的结果都不一样。
- - 回归中包含`treat*cate_over3`和`treat*escore`,会增加Capbility_escore的显著性。但无论怎样，strongleader都显著。
+  - 以escore3_sum为列：escore3_sum与strong为负显著，交互项以及各自的结果都不一样。
+  - 回归中包含`treat*cate_over3`和`treat*escore`,会增加Capbility_escore的显著性。但无论怎样，strongleader都显著。
+  
 3. 按照四分类的话(cate_over4)，三分类中对政治强人的显著性都消失了，但民主适合中国的显著性增加了：
- - newspol在其中的影响很大，去掉的话结果不太一样(主要是对cate_over4)。balanced test里面也显示出实验组和对照组在政治新闻消费方面的差异具有统计显著性。
- - 回归同时包含`treat*cate_over4`和`treat*escore4`,民主适合中国的显著性也有。
+  - newspol在其中的影响很大，去掉的话结果不太一样(主要是对cate_over4)。balanced test里面也显示出实验组和对照组在政治新闻消费方面的差异具有统计显著性。
+  - 回归同时包含`treat*cate_over4`和`treat*escore4`,民主适合中国的显著性也有。
+3. 综上所述，所有结果中对政治强人的结果比较好(即M5的几个问题)，其次是民主是否适合中国(M1)和能力(M3)，对制度自信(M6)和民主积极观念(M4)没影响。
 
 
 ## mean_cate
@@ -555,6 +568,7 @@ results_mean3 <- msummary(mlist,
 results_mean3
 
 ```
+
 1. 按照三分类：同时添加treat与escore和cate_over32(按照均值，只划分为高估和低估)，结果没有一个显著。如果去掉treat*cate_over32的交互项，只添加进cate_over32，leader显著(treat1:escore3_sum)。与此同时，escore3_sum对民主适合中国显著。
 2. 按照四分类：同时添加，只有treat1:cate_over42over对capability显著；只添加进cate_over32，leader显著(treat1:escore3_sum)。
 
@@ -572,20 +586,8 @@ data <- data %>%
 data$trustGovermax <- Recode(data$trustGover,"1:2 = 0;3:4 = 1")
 data$trustLocalmax <- Recode(data$trustLocal,"1:2 = 0;3:4 = 1")
 
-lm_diff_escore4 <- lm(diff_escore4 ~age+party+edu+gender+race+rural+newspol+trustGovermax+incomeFam_level,binomial,data = data)
+lm_diff_escore4 <- lm(diff_escore4 ~age+party+edu+gender+race+rural+newspol+trustGovermax+trustLocalmax+incomeFam_level,binomial,data = data)
 summary(lm_diff_escore4)
-summary(m)
-ctable <- coef(summary(m))
-
-## p值
-p <- pnorm(abs(ctable[, "t value"]), lower.tail = FALSE) * 2
-ctable <- cbind(ctable, "p value" = p)
-ctable
-
-## 置信区间
-ci <- confint(m)
-exp(coef(m))
-exp(cbind(OR = coef(m), ci))
 ```
 
 1. 因子类(有序和无序)都不行：没有polr是因为平行性检验不通过(比例相等)，目前采用clm，放宽假设。或者看一下无序怎么样，但结果应该差不多。
